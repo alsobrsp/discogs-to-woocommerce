@@ -1,27 +1,26 @@
 #!/usr/bin/env python
 # TODO: Pull folders to table
-# TODO: Pull cool discogs_client commits from other forks
+# TODO: Create release updated table
+# TODO: Instances that are no longer in a store folder should be deactivated in the store
 
 from __future__ import print_function
 #from datetime import date, datetime, timedelta
 import mysql.connector
 import discogs_client
-import os
+#import os
 import pprint
 from woocommerce import API
 import sys
 import traceback
-
+import dbqueries as dbq
+import hashlib
 pp = pprint.PrettyPrinter(indent=4)
 
 # DB connection setup
 importdb = mysql.connector.connect(user='alsobrsp', password='spanky5', host='db.seasies.com', database='webuser_decadesofvinyl.com')
 dbcursor = importdb.cursor()
-add_instance = ('INSERT INTO discogs_instance_import '
-                           '(instance_id, rating, title, folder_id, discogs_date_added, notes, release_id) '
-                           'VALUES (%(instance_id)s, %(rating)s, %(title)s, %(folder_id)s, %(discogs_date_added)s, %(notes)s, %(release_id)s)')
+dbcursor_dict = importdb.cursor(dictionary=True)
 
-check_instance = ("SELECT instance_id FROM discogs_instance_import WHERE instance_id = %s")
 
 # WooCommerce API setup
 wcapi = API(
@@ -33,43 +32,130 @@ wcapi = API(
 )
 
 # Discogs API setup
-UserAgent = 'DoV/0.1'
+UserAgent = 'DoV/0.1 +https://www.decadesofvinyl.com'
 AuthToken = "DiSiupFPDVYxsOqpOtwjXmfENbNeLNfhhaCYqbso"
 d = discogs_client.Client(UserAgent, user_token=AuthToken)
 user = d.identity()
-collection = user.collection_folders 
 
+# Hash instance notes
+def hashNotes(instance_notes):
+    try:
+        notes_chksum = hashlib.md5()
+        notes_chksum.update(str(instance_notes).encode())
+    except:
+        pass
+    else:
+        return notes_chksum
+    finally:
+        del notes_chksum
 
+# TODO: Update woo_id
+# Probably need two functions
+def updateInstanceWoo(instance_id):
+    pass
 
-for album in collection[0].releases:
-   #  Check import table
-   dbcursor.execute(check_instance,  (album.instance_id, ))
-   db_instance_id = dbcursor.fetchone()
-   if db_instance_id == None:
-        insert_data = {'instance_id': album.instance_id,
-                        'rating': album.rating,
-                        'title': album.release.title,
-                        'folder_id': album.folder_id,
-                        'discogs_date_added':  album.date_added,
-                        'notes': str(album.notes),
-                        'release_id': album.id}
+# Get Discogs instance info
+def discogsImport (store_folder):
+    query = None
+    hashing_note = ''
+    
+    # Clear in_store flag
+    try:
+        dbcursor.execute(dbq.clear_in_store_flag)
+    except :
+        pp.pprint(dbcursor.statement)
+        traceback.print_exc(file=sys.stdout)
+        sys.exit(5)
+    else:
+        importdb.commit()
+    
+    # Set collection
+    collection = user.collection_folders
+
+    # Get folder index
+    for idxFolder in range(len(collection)):
+        if collection[idxFolder].id == store_folder:
+            store_folder = idxFolder
+
+    # Populate import table
+    for album in collection[store_folder].releases:
+
+        # Concatenate notes
+        hashing_note = None
+        for idx in range(len(album.notes)):
+            hashing_note = str(hashing_note) + str(album.notes[idx]['field_id']) + str(album.notes[idx]['value'])
+
+        # Hash the notes
+        notes_chksum = hashNotes(hashing_note)
+
+        #  Check import table
         try:
-            dbcursor.execute(add_instance,  insert_data )
+            dbcursor_dict.execute(dbq.check_instance,  (album.instance_id, ))
+            db_instance = dbcursor_dict.fetchone()
         except :
             pp.pprint(dbcursor.statement)
             traceback.print_exc(file=sys.stdout)
-            os._exit(0)
+            sys.exit(5)
+            
+        # Set in_store flag
+        query_data = {'instance_id': album.instance_id}
+        query = dbq.still_in_store
+
+        # New items
+        if db_instance == None:
+            
+            # Build insert data
+            query_data = {'instance_id': album.instance_id,
+                                    'rating': album.rating,
+                                    'title': album.release.title,
+                                    'folder_id': album.folder_id,
+                                    'discogs_date_added':  album.date_added,
+                                    'notes': str(album.notes),
+                                    'notes_chksum': notes_chksum.hexdigest(),
+                                    'release_id': album.id, 
+                                    'in_store': True, 
+                                    'update_store': True}
+            query = dbq.add_instance
+
+        # Update notes if hash is different
+        elif db_instance['instance_id'] == album.instance_id and db_instance['notes_chksum'] != notes_chksum.hexdigest():
+            pass
+            query_data = {'notes': str(album.notes),
+                                     'notes_chksum': notes_chksum.hexdigest(),
+                                     'in_store': True,
+                                     'update_store': True,  
+                                     'instance_id': album.instance_id}
+                                     
+            query = dbq.update_instance_notes_chksum
+            
+
+
+        if query != None:
+            try:
+                dbcursor.execute(query,  query_data )
+            except :
+                pp.pprint(dbcursor.statement)
+                traceback.print_exc(file=sys.stdout)
+                sys.exit(5)
         importdb.commit()
-#        pp.pprint(insert_data)
-#        os._exit(0)
+    #        pp.pprint(insert_data)
+    #        sys.exit(0)
+
+def getInstance(instance_id):
+    dbcursor_dict.execute(dbq.get_instance_info,  (instance_id,))
+    instance_data = dbcursor_dict.fetchone()
+    return instance_data
+
+# TODO: genre match table
+def getGenres():    
+    pass
 
 
 
 
-
-
-
-   # Create Woo Product
+def createWooProduct (instance_id):
+    pass
+    # Create Woo Product
 #   data = {
 #        "name": "Premium Quality",
 #        "type": "simple",
@@ -91,9 +177,36 @@ for album in collection[0].releases:
 #  pp.pprint(release.labels)
 #  
 
+# TODO: updates based on instance notes and release update
+def updateWooProduct(instance_id):
+    pass
 
-#
+def getStorefolders():
+    # Find store folders
+    store_folders = []
+    folders = user.collection_folders
+    for i in range(len(folders)):
+        if folders[i].name.find("Store") == 0 :
+            store_folders.append(folders[i].id)
+    return store_folders
+    
+
+def main():
+    # Get store folders
+    store_folders = getStorefolders()
+
+    # Update Instance Table
+    for idxSF in range(len(store_folders)):
+        discogsImport (store_folders[idxSF])
 
 
 
-os._exit(0)
+    pp.pprint(getInstance('155450581'))
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
+
+
+
