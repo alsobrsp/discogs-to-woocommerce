@@ -6,7 +6,6 @@ add_instance = ('INSERT INTO discogs_instance_import '
                            'VALUES (%(instance_id)s, %(rating)s, %(title)s, %(folder_id)s, %(discogs_date_added)s, %(notes)s, %(notes_chksum)s, %(release_id)s), %(in_store)s, %(update_store)s')
 
 # Check if instance is in DB
-check_instance = ("SELECT * FROM discogs_instance_import WHERE instance_id = %s")
 
 update_instance_woo_id = ('UPDATE discogs_instance_import '
                                             'SET woo_id = %(woo_id)s '
@@ -35,3 +34,5 @@ return_in_store = ('UPDATE discogs_instance_import '
                                      'SET in_store = TRUE, '
                                      'not_in_store = FALSE '
                                      'WHERE instance_id = %(instance_id)s')
+
+get_instance_list = ('select * from discogs_instance_import')

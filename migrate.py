@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # TODO: Create release updated table
 # NOTE: May be able to remove columns not_in_store and update_store
+# TODO: Convert using custom fields for store designation
 
 from __future__ import print_function
 # from datetime import date, datetime, timedelta
@@ -29,21 +30,27 @@ user = d.identity()
 
 
 def main():
+    # TODO: Custom field names and and ID
+    getcustomfields()
+
+    # TODO: Delete this when done with custom field change
     # Get store folders
     store_folders = getStorefolders()
 
+    # TODO: Delete this when done with custom field change
     # Update Instance Table
-    # TODO: move for loop to discogsImport
     for idxSF in range(len(store_folders)):
         discogsImport(store_folders[idxSF])
     
-    # TODO: get release check update field
+    # TODO: get release, check update field
+    
+    getrelease_data(release_id)
     # TODO: get labels / flag for create 
     # TODO: get genres / flag for create
     # TODO: get artists / flag for create
     # TODO: get decades? / flag for create
     # TODO: populate catagories table
-
+    # TODO: Valuations from discogs
     # TODO: releases updated
     
     pp.pprint(getInstanceData('239477059'))
@@ -52,7 +59,8 @@ def main():
 
 # Hash instance notes
 def hashNotes(instance_notes):
-    """Sums the concatenated notes field.
+    """
+    Sums the concatenated notes field.
     This provides a check for updates
     """
     try:
@@ -67,8 +75,11 @@ def hashNotes(instance_notes):
 
 
 # Get Discogs instance info
-# TODO: change folder id in table on folder change
+# FIXME: change folder id in table on folder change
 def discogsImport (store_folder):
+    """
+    Imports discogs collections to table
+    """
     query = None
     hashing_note = ''
     
@@ -110,7 +121,7 @@ def discogsImport (store_folder):
 
         #  Check import table
         try:
-            dbcursor_dict.execute(dbq.check_instance,  (album.instance_id, ))
+            dbcursor_dict.execute(dbq.get_instance_info,  (album.instance_id, ))
             db_instance = dbcursor_dict.fetchone()
         except :
             pp.pprint(dbcursor.statement)
@@ -185,6 +196,15 @@ def getStorefolders():
             store_folders.append(folders[i].id)
     return store_folders
 
+def getinstancelist():
+    """
+    Get the list of albums from discogs_instance_import
+    """
+    dbcursor_dict.execute(dbq.get_instance_list,  )
+    db_instance_list = dbcursor_dict.fetchall()
+    return db_instance_list
+
+    
 if __name__ == "__main__":
     main()
 

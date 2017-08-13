@@ -16,3 +16,6 @@ wooVersion="wc/v2"
 # Discogs API setup
 UserAgent = 'DoV/0.1 +https://www.decadesofvinyl.com'
 AuthToken = "DiSiupFPDVYxsOqpOtwjXmfENbNeLNfhhaCYqbso"
+
+# NOTE: folder 0 for ALL, 1217742 for 7up test
+discogs_folder=1217742
