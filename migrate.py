@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # TODO: Create release updated table
+# NOTE: May be able to remove columns not_in_store and update_store
 
 from __future__ import print_function
-#from datetime import date, datetime, timedelta
+# from datetime import date, datetime, timedelta
 import mysql.connector
 import discogs_client
-#import os
+# import os
 import pprint
 import sys
 import traceback
@@ -34,8 +35,7 @@ def main():
     # Update Instance Table
     # TODO: move for loop to discogsImport
     for idxSF in range(len(store_folders)):
-        discogsImport (store_folders[idxSF])
-    
+        discogsImport(store_folders[idxSF])
     
     # TODO: get release check update field
     # TODO: get labels / flag for create 
@@ -46,13 +46,15 @@ def main():
 
     # TODO: releases updated
     
-
     pp.pprint(getInstanceData('239477059'))
     sys.exit(0)
 
 
 # Hash instance notes
 def hashNotes(instance_notes):
+    """Sums the concatenated notes field.
+    This provides a check for updates
+    """
     try:
         notes_chksum = hashlib.md5()
         notes_chksum.update(str(instance_notes).encode())
@@ -62,6 +64,7 @@ def hashNotes(instance_notes):
         return notes_chksum
     finally:
         del notes_chksum
+
 
 # Get Discogs instance info
 # TODO: change folder id in table on folder change
@@ -160,15 +163,18 @@ def discogsImport (store_folder):
                 sys.exit(5)
         importdb.commit()
 
+
 # Query DB for instance data
 def getInstanceData(instance_id):
     dbcursor_dict.execute(dbq.get_instance_info,  (instance_id,))
     instance_data = dbcursor_dict.fetchone()
     return instance_data
 
+
 # TODO: genre match table
-def getGenres():    
+def getGenres():
     pass
+
 
 def getStorefolders():
     # Find store folders
@@ -178,12 +184,7 @@ def getStorefolders():
         if folders[i].name.find("Store") == 0 :
             store_folders.append(folders[i].id)
     return store_folders
-    
-
-
 
 if __name__ == "__main__":
     main()
-
-
 
