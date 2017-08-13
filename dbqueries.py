@@ -33,6 +33,5 @@ still_in_store = ('UPDATE discogs_instance_import '
                                      
 return_in_store = ('UPDATE discogs_instance_import '
                                      'SET in_store = TRUE, '
-                                     'update_store = TRUE, '
                                      'not_in_store = FALSE '
                                      'WHERE instance_id = %(instance_id)s')
