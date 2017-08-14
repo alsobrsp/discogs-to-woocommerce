@@ -18,4 +18,4 @@ UserAgent = 'DoV/0.1 +https://www.decadesofvinyl.com'
 AuthToken = "DiSiupFPDVYxsOqpOtwjXmfENbNeLNfhhaCYqbso"
 
 # NOTE: This is the index not the id. folder 0 for ALL, 26 for 7up test
-discogs_folder=26
+discogs_folder=27
