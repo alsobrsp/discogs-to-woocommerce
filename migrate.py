@@ -4,7 +4,7 @@
 # TODO: Convert using custom fields for store designation
 
 from __future__ import print_function
-# from datetime import date, datetime, timedelta
+from datetime import datetime
 import mysql.connector
 import discogs_client
 # import os
@@ -46,6 +46,7 @@ def main():
     # TODO: populate catagories table
     # TODO: Valuations from discogs
     # TODO: releases updated
+    # TODO: Move sold to zz Sold folder
     
     pp.pprint(getInstanceData('239477059'))
     sys.exit(0)
@@ -74,14 +75,13 @@ def discogsImport (discogs_folder):
     """
     Imports discogs collections to table
     """
-    query = None
-    hashing_note = ''
     
     # Set collection
     collection = user.collection_folders
 
     # Populate import table
     for album in collection[discogs_folder].releases:
+        query = None
 
         # Concatenate notes
         hashing_note = None
@@ -100,10 +100,6 @@ def discogsImport (discogs_folder):
             traceback.print_exc(file=sys.stdout)
             sys.exit(5)
             
-        # Set in_store flag
-        query_data = {'instance_id': album.instance_id}
-        query = dbq.still_in_store
-
         # New items
         if db_instance == None:
             
@@ -116,8 +112,7 @@ def discogsImport (discogs_folder):
                                     'notes': str(album.notes),
                                     'notes_chksum': notes_chksum.hexdigest(),
                                     'release_id': album.id, 
-                                    'in_store': True, 
-                                    'update_store': True}
+                                    'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             query = dbq.add_instance
 
         # Update notes if hash is different
@@ -125,17 +120,20 @@ def discogsImport (discogs_folder):
             pass
             query_data = {'notes': str(album.notes),
                                      'notes_chksum': notes_chksum.hexdigest(),
-                                     'in_store': True,
-                                     'update_store': True,  
+                                     'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
                                      'instance_id': album.instance_id}
                                      
             query = dbq.update_instance_notes_chksum
 
-        # Return instance to store
-        elif db_instance['instance_id'] == album.instance_id and db_instance['not_in_store'] == 1:
-            query_data = {'instance_id': album.instance_id}
-            query = dbq.return_in_store
-            
+        # Update folder id
+        elif db_instance['instance_id'] == album.instance_id and db_instance['folder_id'] != album.folder_id:
+            pass
+            query_data = {'folder_id': album.folder_id,
+                                     'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
+                                     'instance_id': album.instance_id}
+                                     
+            query = dbq.update_instance_folder_id
+
         # Execute queries
         if query != None:
             try:
@@ -170,8 +168,7 @@ def getinstancelist():
 
 def getcustomfields():
     for idx in range(len(user.collection_fields)):
-        query_data = {'field_id': user.collection_fields[idx].id,
-                                 'field_name': user.collection_fields[idx].name}
+        query = None
 
         #  Check field table for field
         try:
@@ -184,18 +181,25 @@ def getcustomfields():
 
         if db_instance == None:
             query = dbq.custom_field_insert
-        else:
-            query = dbq.custom_field_update
+            query_data = {'field_id': user.collection_fields[idx].id,
+                                     'field_name': user.collection_fields[idx].name, 
+                                     'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')  }
 
+        elif db_instance['field_name'] != user.collection_fields[idx].name :
+            query = dbq.custom_field_update
+            query_data = {'field_id': user.collection_fields[idx].id,
+                                     'field_name': user.collection_fields[idx].name, 
+                                     'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S') }
         
-        try:
-            dbcursor.execute(query,  query_data )
-        except :
-            pp.pprint(dbcursor.statement)
-            traceback.print_exc(file=sys.stdout)
-            sys.exit(5)
-        else:
-            importdb.commit()
+        if query != None:
+            try:
+                dbcursor.execute(query,  query_data )
+            except :
+                pp.pprint(dbcursor.statement)
+                traceback.print_exc(file=sys.stdout)
+                sys.exit(5)
+            else:
+                importdb.commit()
 
 
 if __name__ == "__main__":
