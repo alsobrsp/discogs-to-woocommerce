@@ -30,21 +30,15 @@ user = d.identity()
 
 
 def main():
-    # TODO: Custom field names and and ID
+    # Custom field name and ID, populate database
     getcustomfields()
 
-    # TODO: Delete this when done with custom field change
-    # Get store folders
-    store_folders = getStorefolders()
-
-    # TODO: Delete this when done with custom field change
     # Update Instance Table
-    for idxSF in range(len(store_folders)):
-        discogsImport(store_folders[idxSF])
+    discogsImport(discogs_folder)
     
     # TODO: get release, check update field
+    #getrelease_data(release_id)
     
-    getrelease_data(release_id)
     # TODO: get labels / flag for create 
     # TODO: get genres / flag for create
     # TODO: get artists / flag for create
@@ -76,40 +70,18 @@ def hashNotes(instance_notes):
 
 # Get Discogs instance info
 # FIXME: change folder id in table on folder change
-def discogsImport (store_folder):
+def discogsImport (discogs_folder):
     """
     Imports discogs collections to table
     """
     query = None
     hashing_note = ''
     
-    try:
-        # Clear db in_store flag
-        dbcursor.execute(dbq.clear_in_store_flag)
-        
-        # Get instance list from db
-        dbcursor.execute(dbq.get_instance_id_list,  (store_folder,  ))
-        db_instances = dbcursor.fetchall()
-        db_instances = [i[0] for i in db_instances]
-    except :
-        pp.pprint(dbcursor.statement)
-        traceback.print_exc(file=sys.stdout)
-        sys.exit(5)
-    else:
-        importdb.commit()
-    
     # Set collection
     collection = user.collection_folders
 
-    # Get folder index
-    for idxFolder in range(len(collection)):
-        if collection[idxFolder].id == store_folder:
-            store_folder = idxFolder
-
     # Populate import table
-    for album in collection[store_folder].releases:
-        # Remove instance from list
-        db_instances.remove(album.instance_id)
+    for album in collection[discogs_folder].releases:
 
         # Concatenate notes
         hashing_note = None
@@ -119,7 +91,7 @@ def discogsImport (store_folder):
         # Hash the notes
         notes_chksum = hashNotes(hashing_note)
 
-        #  Check import table
+        #  Check instance table for instance
         try:
             dbcursor_dict.execute(dbq.get_instance_info,  (album.instance_id, ))
             db_instance = dbcursor_dict.fetchone()
@@ -172,7 +144,8 @@ def discogsImport (store_folder):
                 pp.pprint(dbcursor.statement)
                 traceback.print_exc(file=sys.stdout)
                 sys.exit(5)
-        importdb.commit()
+            else:
+                importdb.commit()
 
 
 # Query DB for instance data
@@ -187,24 +160,44 @@ def getGenres():
     pass
 
 
-def getStorefolders():
-    # Find store folders
-    store_folders = []
-    folders = user.collection_folders
-    for i in range(len(folders)):
-        if folders[i].name.find("Store") == 0 :
-            store_folders.append(folders[i].id)
-    return store_folders
-
 def getinstancelist():
     """
     Get the list of albums from discogs_instance_import
     """
-    dbcursor_dict.execute(dbq.get_instance_list,  )
+    dbcursor_dict.execute(dbq.get_all_instance_list,  )
     db_instance_list = dbcursor_dict.fetchall()
     return db_instance_list
 
-    
+def getcustomfields():
+    for idx in range(len(user.collection_fields)):
+        query_data = {'field_id': user.collection_fields[idx].id,
+                                 'field_name': user.collection_fields[idx].name}
+
+        #  Check field table for field
+        try:
+            dbcursor_dict.execute(dbq.get_field,  (user.collection_fields[idx].id, ))
+            db_instance = dbcursor_dict.fetchone()
+        except :
+            pp.pprint(dbcursor.statement)
+            traceback.print_exc(file=sys.stdout)
+            sys.exit(5)
+
+        if db_instance == None:
+            query = dbq.custom_field_insert
+        else:
+            query = dbq.custom_field_update
+
+        
+        try:
+            dbcursor.execute(query,  query_data )
+        except :
+            pp.pprint(dbcursor.statement)
+            traceback.print_exc(file=sys.stdout)
+            sys.exit(5)
+        else:
+            importdb.commit()
+
+
 if __name__ == "__main__":
     main()
 

@@ -32,3 +32,16 @@ return_in_store = ('UPDATE dov_discogs_instances '
                                      'WHERE instance_id = %(instance_id)s')
 
 get_all_instance_list = ('select * from dov_discogs_instances')
+
+# Get field list
+get_field = ('select * from dov_discogs_fields WHERE field_id = %s')
+
+# Insert custom fields to db
+custom_field_insert = ('INSERT INTO dov_discogs_fields '
+                                     '(field_id, field_name) '
+                                     'VALUES (%(field_id)s, %(field_name)s)')
+
+# Update custom fields in db
+custom_field_update = ('UPDATE dov_discogs_fields '
+                                      'SET field_name = %(field_name)s '
+                                      'WHERE field_id = %(field_id)s')
