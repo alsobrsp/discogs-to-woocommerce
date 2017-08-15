@@ -36,8 +36,10 @@ def main():
     # Update Instance Table
     discogsImport(discogs_folder)
     
-    # TODO: get release, check update field
+    # TODO: get release information
+    # new_releases = get_new_releases()
     #getrelease_data(release_id)
+
     
     # TODO: get labels / flag for create 
     # TODO: get genres / flag for create
@@ -47,8 +49,9 @@ def main():
     # TODO: Valuations from discogs
     # TODO: releases updated
     # TODO: Move sold to zz Sold folder
+    # TODO: Get images
     
-    pp.pprint(getInstanceData('239477059'))
+    pp.pprint(exec_db_query_get(dbq.get_instance_info, '239477059'))
     sys.exit(0)
 
 
@@ -91,14 +94,8 @@ def discogsImport (discogs_folder):
         # Hash the notes
         notes_chksum = hashNotes(hashing_note)
 
-        #  Check instance table for instance
-        try:
-            dbcursor_dict.execute(dbq.get_instance_info,  (album.instance_id, ))
-            db_instance = dbcursor_dict.fetchone()
-        except :
-            pp.pprint(dbcursor.statement)
-            traceback.print_exc(file=sys.stdout)
-            sys.exit(5)
+        #  Query instance table for instance
+        db_instance = exec_db_query_get(dbq.get_instance_info, album.instance_id)
             
         # New items
         if db_instance == None:
@@ -135,15 +132,7 @@ def discogsImport (discogs_folder):
             query = dbq.update_instance_folder_id
 
         # Execute queries
-        if query != None:
-            try:
-                dbcursor.execute(query,  query_data )
-            except :
-                pp.pprint(dbcursor.statement)
-                traceback.print_exc(file=sys.stdout)
-                sys.exit(5)
-            else:
-                importdb.commit()
+        exec_db_query(query, query_data)
 
 
 # Query DB for instance data
@@ -171,13 +160,7 @@ def getcustomfields():
         query = None
 
         #  Check field table for field
-        try:
-            dbcursor_dict.execute(dbq.get_field,  (user.collection_fields[idx].id, ))
-            db_instance = dbcursor_dict.fetchone()
-        except :
-            pp.pprint(dbcursor.statement)
-            traceback.print_exc(file=sys.stdout)
-            sys.exit(5)
+        db_instance = exec_db_query_get(dbq.get_field, user.collection_fields[idx].id)
 
         if db_instance == None:
             query = dbq.custom_field_insert
@@ -192,14 +175,28 @@ def getcustomfields():
                                      'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S') }
         
         if query != None:
-            try:
-                dbcursor.execute(query,  query_data )
-            except :
-                pp.pprint(dbcursor.statement)
-                traceback.print_exc(file=sys.stdout)
-                sys.exit(5)
-            else:
-                importdb.commit()
+            exec_db_query(query, query_data)
+
+def exec_db_query(query, query_data):
+    try:
+        dbcursor.execute(query,  query_data )
+    except :
+        pp.pprint(dbcursor.statement)
+        traceback.print_exc(file=sys.stdout)
+        importdb.close()
+        sys.exit(5)
+    else:
+        importdb.commit()
+        
+def exec_db_query_get(query, query_data):
+    try:
+        dbcursor_dict.execute(query,  (query_data, ))
+        return dbcursor_dict.fetchone()
+    except :
+        pp.pprint(dbcursor.statement)
+        traceback.print_exc(file=sys.stdout)
+        importdb.close()
+        sys.exit(5)
 
 
 if __name__ == "__main__":
