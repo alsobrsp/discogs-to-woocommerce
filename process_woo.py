@@ -1,26 +1,32 @@
 #!/usr/bin/env python
 # TODO: Instances that are no longer in a store folder should be deactivated in the store
 
-
-from woocommerce import API
+from __future__ import print_function
+#from datetime import datetime
+import discogs_client
+# import os
+import pprint
+import sys
+import dbqueries as dbq
+# import hashlib
 
 # Import config
 from config import *
 
-# WooCommerce API setup
-wcapi = API(
-    wooUrl,
-    wooConsumer_key,
-    wooConsumer_secret,
-    wooWP_api,
-    wooVersion
-)
+pp = pprint.PrettyPrinter(indent=4)
 
+# WooCommerce API setup
+wcapi = API(**wooconfig)
+
+# Discogs API setup
+discogs = discogs_client.Client(UserAgent, user_token=AuthToken)
+user = discogs.identity()
 
 def main():
     # TODO: Process Woo
     # TODO: create catagories
     # TODO: create new products
+    create_product()
     # TODO: update / reactivate existing products 
     # TODO: deactivate removed products
     # TODO: Sold products Woo -> Discogs

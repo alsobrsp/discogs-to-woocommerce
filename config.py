@@ -7,11 +7,12 @@ dbconfig = {'user': 'alsobrsp',
 
 
 # WooCommerce API setup
-wooUrl="https://www.decadesofvinyl.com",
-wooConsumer_key="ck_f839dfe156f0253a7b4a7cd810a40de86d1b1519",
-wooConsumer_secret="cs_220b8c6746a0733df9c73c656ef699db8baaceca",
-wooWP_api=True,
-wooVersion="wc/v2"
+wooconfig = {'url': "https://www.decadesofvinyl.com",
+                        'consumer_key': "ck_f839dfe156f0253a7b4a7cd810a40de86d1b1519",
+                        'consumer_secret': "cs_220b8c6746a0733df9c73c656ef699db8baaceca",
+                        'wp_api': True,
+                        'version': "wc/v2"
+                        }
 
 # Discogs API setup
 UserAgent = 'DoV/0.1 +https://www.decadesofvinyl.com'

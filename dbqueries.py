@@ -1,4 +1,59 @@
 #!/usr/bin/env python
+import pprint
+import sys
+import traceback
+import mysql.connector
+from config import *
+
+pp = pprint.PrettyPrinter(indent=4)
+
+# DB connection setup
+importdb = mysql.connector.connect(**dbconfig)
+dbcursor = importdb.cursor()
+dbcursor_dict = importdb.cursor(dictionary=True)
+
+def exec_db_query(query, query_data=None, qty="one",  query_type='select'):
+    try:
+        if query_data == None:
+            dbcursor.execute(query)
+        else:
+            dbcursor.execute(query,  query_data )
+        
+        if query_type == 'select':
+            if qty == 'one':
+                return dbcursor.fetchone()
+            elif qty== 'all':
+                return dbcursor.fetchall()
+        
+
+    except :
+        pp.pprint(dbcursor.statement)
+        traceback.print_exc(file=sys.stdout)
+        importdb.close()
+        sys.exit(5)
+    else:
+        importdb.commit()
+
+def exec_db_query_dict(query, query_data=None,  qty="one"):
+    try:
+        if query_data == None:
+            dbcursor_dict.execute(query)
+        else:
+            dbcursor_dict.execute(query,  (query_data, ))
+
+        if qty == 'one':
+            return dbcursor_dict.fetchone()
+        elif qty== 'all':
+            return dbcursor_dict.fetchall()
+
+    except :
+        pp.pprint(dbcursor.statement)
+        traceback.print_exc(file=sys.stdout)
+        importdb.close()
+        sys.exit(5)
+
+    else:
+        importdb.commit()
 
 # Add instance 
 add_instance = ('INSERT INTO dov_discogs_instances '
@@ -40,3 +95,13 @@ custom_field_update = ('UPDATE dov_discogs_fields '
                                       'SET field_name = %(field_name)s, '
                                       'update_date = %(update_date)s '
                                       'WHERE field_id = %(field_id)s')
+
+# This is all releases that are now in the instance table but not in releases
+get_new_release_list = ('select DISTINCT release_id from dov_discogs_instances where '
+                                       'NOT EXISTS ( select release_id from dov_discogs_releases '
+                                       'where dov_discogs_releases.release_id = dov_discogs_instances.release_id)')
+                                       
+import_new_release = ('INSERT INTO dov_discogs_releases '
+                                     '(release_id, title, artists, labels, styles, genres, url, discogs_date_added, discogs_date_changed, create_date) '
+                                     'VALUES '
+                                     '(%(release_id)s, %(title)s, %(artists)s, %(labels)s, %(styles)s, %(genres)s, %(url)s, %(discogs_date_added)s, %(discogs_date_changed)s, %(create_date)s)')

@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # TODO: Create release updated table
-# NOTE: May be able to remove columns not_in_store and update_store
 # TODO: Convert using custom fields for store designation
 
 from __future__ import print_function
 from datetime import datetime
-import mysql.connector
+
 import discogs_client
 # import os
 import pprint
 import sys
-import traceback
+# import traceback
 import dbqueries as dbq
 import hashlib
 
@@ -19,14 +18,10 @@ from config import *
 
 pp = pprint.PrettyPrinter(indent=4)
 
-# DB connection setup
-importdb = mysql.connector.connect(**dbconfig)
-dbcursor = importdb.cursor()
-dbcursor_dict = importdb.cursor(dictionary=True)
 
 # Discogs API setup
-d = discogs_client.Client(UserAgent, user_token=AuthToken)
-user = d.identity()
+discogs = discogs_client.Client(UserAgent, user_token=AuthToken)
+user = discogs.identity()
 
 
 def main():
@@ -35,14 +30,16 @@ def main():
 
     # Update Instance Table
     discogsImport(discogs_folder)
-    
-    # TODO: get release information
-    # new_releases = get_new_releases()
-    #getrelease_data(release_id)
 
-    
+    # Populate release information
+    discogs_new_releases()
+#    discogs_update_releases()
+
     # TODO: get labels / flag for create 
-    # TODO: get genres / flag for create
+
+
+
+    # TODO: get genres / flag for create attribute
     # TODO: get artists / flag for create
     # TODO: get decades? / flag for create
     # TODO: populate catagories table
@@ -50,8 +47,8 @@ def main():
     # TODO: releases updated
     # TODO: Move sold to zz Sold folder
     # TODO: Get images
-    
-    pp.pprint(exec_db_query_get(dbq.get_instance_info, '239477059'))
+
+    pp.pprint(dbq.exec_db_query_dict(dbq.get_instance_info, '2757772'))
     sys.exit(0)
 
 
@@ -71,14 +68,59 @@ def hashNotes(instance_notes):
     finally:
         del notes_chksum
 
+def discogs_new_releases():
+    """
+    Get/Update release table
+    """
+    import_new_releases = dbq.exec_db_query(dbq.get_new_release_list, qty='all')
+    import_new_releases = [i[0] for i in import_new_releases]
+
+    for index in range(len(import_new_releases)):
+        print(import_new_releases[index])
+        release = discogs.release(import_new_releases[index])
+        release_data = {'release_id': release.id,
+                                    'title': release.title,
+                                    'artists': str(release.artists),
+                                    'labels':str( release.labels),
+                                    'styles': str(release.styles),
+                                    'genres': str(release.genres),
+                                    'url': str(release.url),
+                                    'discogs_date_added': release.date_added, 
+                                    'discogs_date_changed': release.date_changed, 
+                                    'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        
+        dbq.exec_db_query(dbq.import_new_release,  release_data, query_type='insert')
+
+        
+def discogs_update_releases():
+    """
+    Get/Update release table
+    """
+    import_new_releases = dbq.exec_db_query(dbq.get_new_release_list, qty='all')
+    import_new_releases = [i[0] for i in import_new_releases]
+
+    for index in range(len(import_new_releases)):
+        print(import_new_releases[index])
+        release = discogs.release(import_new_releases[index])
+        release_data = {'release_id': release.id,
+                                    'title': release.title,
+                                    'artists': str(release.artists),
+                                    'labels':str( release.labels),
+                                    'styles': str(release.styles),
+                                    'genres': str(release.genres),
+                                    'url': str(release.url),
+                                    'discogs_date_added': release.date_added, 
+                                    'discogs_date_changed': release.date_changed, 
+                                    'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        
+        dbq.exec_db_query(dbq.import_update_release,  release_data, query_type='insert')
 
 # Get Discogs instance info
-# FIXME: change folder id in table on folder change
 def discogsImport (discogs_folder):
     """
     Imports discogs collections to table
     """
-    
+
     # Set collection
     collection = user.collection_folders
 
@@ -95,11 +137,11 @@ def discogsImport (discogs_folder):
         notes_chksum = hashNotes(hashing_note)
 
         #  Query instance table for instance
-        db_instance = exec_db_query_get(dbq.get_instance_info, album.instance_id)
-            
+        db_instance = dbq.exec_db_query_dict(dbq.get_instance_info, album.instance_id)
+
         # New items
         if db_instance == None:
-            
+
             # Build insert data
             query_data = {'instance_id': album.instance_id,
                                     'rating': album.rating,
@@ -119,7 +161,7 @@ def discogsImport (discogs_folder):
                                      'notes_chksum': notes_chksum.hexdigest(),
                                      'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
                                      'instance_id': album.instance_id}
-                                     
+
             query = dbq.update_instance_notes_chksum
 
         # Update folder id
@@ -128,11 +170,12 @@ def discogsImport (discogs_folder):
             query_data = {'folder_id': album.folder_id,
                                      'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
                                      'instance_id': album.instance_id}
-                                     
+
             query = dbq.update_instance_folder_id
 
         # Execute queries
-        exec_db_query(query, query_data)
+        if query != None:
+            dbq.exec_db_query(query, query_data, query_type='insert')
 
 
 # Query DB for instance data
@@ -160,7 +203,7 @@ def getcustomfields():
         query = None
 
         #  Check field table for field
-        db_instance = exec_db_query_get(dbq.get_field, user.collection_fields[idx].id)
+        db_instance = dbq.exec_db_query_dict(dbq.get_field, user.collection_fields[idx].id)
 
         if db_instance == None:
             query = dbq.custom_field_insert
@@ -173,30 +216,10 @@ def getcustomfields():
             query_data = {'field_id': user.collection_fields[idx].id,
                                      'field_name': user.collection_fields[idx].name, 
                                      'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S') }
-        
-        if query != None:
-            exec_db_query(query, query_data)
 
-def exec_db_query(query, query_data):
-    try:
-        dbcursor.execute(query,  query_data )
-    except :
-        pp.pprint(dbcursor.statement)
-        traceback.print_exc(file=sys.stdout)
-        importdb.close()
-        sys.exit(5)
-    else:
-        importdb.commit()
-        
-def exec_db_query_get(query, query_data):
-    try:
-        dbcursor_dict.execute(query,  (query_data, ))
-        return dbcursor_dict.fetchone()
-    except :
-        pp.pprint(dbcursor.statement)
-        traceback.print_exc(file=sys.stdout)
-        importdb.close()
-        sys.exit(5)
+        if query != None:
+            dbq.exec_db_query(query, query_data, query_type='insert')
+
 
 
 if __name__ == "__main__":
