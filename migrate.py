@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # TODO: Create release updated table
 # TODO: Convert using custom fields for store designation
+# TODO: Can I remove the select in the instance loop? Load the instance table into a dict and test against that??? Line 143
+
 
 from __future__ import print_function
 from datetime import datetime
@@ -130,8 +132,9 @@ def discogsImport (discogs_folder):
 
         # Concatenate notes
         hashing_note = None
-        for idx in range(len(album.notes)):
-            hashing_note = str(hashing_note) + str(album.notes[idx]['field_id']) + str(album.notes[idx]['value'])
+        if album.notes != None:
+            for idx in range(len(album.notes)):
+                hashing_note = str(hashing_note) + str(album.notes[idx]['field_id']) + str(album.notes[idx]['value'])
 
         # Hash the notes
         notes_chksum = hashNotes(hashing_note)
