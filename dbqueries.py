@@ -12,12 +12,15 @@ importdb = mysql.connector.connect(**dbconfig)
 dbcursor = importdb.cursor()
 dbcursor_dict = importdb.cursor(dictionary=True)
 
-def exec_db_query(query, query_data=None, qty="one",  query_type='select'):
+def exec_db_query(query, query_data=None, qty="one",  query_type="select",  query_many="no"):
     try:
-        if query_data == None:
+        if query_data == None and query_many == "no":
             dbcursor.execute(query)
-        else:
+        elif query_many == "no":
             dbcursor.execute(query,  query_data )
+        elif query_type == "insert" and query_many == "yes":
+            dbcursor.executemany(query,  query_data )
+        
         
         if query_type == 'select':
             if qty == 'one':
@@ -105,3 +108,21 @@ import_new_release = ('INSERT INTO dov_discogs_releases '
                                      '(release_id, title, artists, labels, styles, genres, url, discogs_date_added, discogs_date_changed, create_date) '
                                      'VALUES '
                                      '(%(release_id)s, %(title)s, %(artists)s, %(labels)s, %(styles)s, %(genres)s, %(url)s, %(discogs_date_added)s, %(discogs_date_changed)s, %(create_date)s)')
+
+# Genres
+get_release_genres = ('select genres from dov_discogs_releases')
+insert_genres_tmp = ('insert into dov_discogs_genres_tmp (genre) values (%s)')
+update_genres = ('INSERT INTO dov_discogs_genres (genre) '
+                              'SELECT DISTINCT '
+                              '   genre '
+                              'FROM '
+                              '   dov_discogs_genres_tmp '
+                              'WHERE '
+                              '   NOT EXISTS( SELECT  '
+                              '         genre '
+                              '      FROM '
+                              '         dov_discogs_genres '
+                              '      WHERE '
+                              '         dov_discogs_genres.genre = dov_discogs_genres_tmp.genre)')
+
+truncate_genres_tmp = ('TRUNCATE dov_discogs_genres_tmp')

@@ -38,7 +38,7 @@ def main():
 #    discogs_update_releases()
 
     # TODO: get labels / flag for create 
-
+    getgenres()
 
 
     # TODO: get genres / flag for create attribute
@@ -188,10 +188,23 @@ def getInstanceData(instance_id):
     return instance_data
 
 
-# TODO: genre match table
-def getGenres():
-    pass
+# TODO: insert into temp table, use insert/select to copy new to master table
+def getgenres():
+    query_data = []
+    dbgenres = dbq.exec_db_query(dbq.get_release_genres,  qty='all')
+    for idx1 in range(len(dbgenres)):
+        genrerow = eval(dbgenres[idx1][0])
+        for idx2 in range(len(genrerow)):
+            query_data.append(genrerow[idx2])
+    query_data = list(zip(set(query_data)))
+    query = dbq.insert_genres_tmp
+    dbq.exec_db_query(query, query_data, query_type="insert", query_many="yes")
 
+    # insert new genres
+    dbq.exec_db_query(dbq.update_genres)
+
+    # Truncate temp table
+    dbq.exec_db_query(dbq.truncate_genres_tmp)
 
 def getinstancelist():
     """
