@@ -113,16 +113,25 @@ import_new_release = ('INSERT INTO dov_discogs_releases '
 get_release_genres = ('select genres from dov_discogs_releases')
 insert_genres_tmp = ('insert into dov_discogs_genres_tmp (genre) values (%s)')
 update_genres = ('INSERT INTO dov_discogs_genres (genre) '
-                              'SELECT DISTINCT '
-                              '   genre '
-                              'FROM '
-                              '   dov_discogs_genres_tmp '
-                              'WHERE '
-                              '   NOT EXISTS( SELECT  '
-                              '         genre '
-                              '      FROM '
-                              '         dov_discogs_genres '
-                              '      WHERE '
-                              '         dov_discogs_genres.genre = dov_discogs_genres_tmp.genre)')
+                              'SELECT DISTINCT genre '
+                              'FROM dov_discogs_genres_tmp '
+                              'WHERE NOT EXISTS( SELECT genre '
+                              '      FROM dov_discogs_genres '
+                              '      WHERE dov_discogs_genres.genre = dov_discogs_genres_tmp.genre)')
 
 truncate_genres_tmp = ('TRUNCATE dov_discogs_genres_tmp')
+
+# Sales Channels
+get_store_fields = ('select field_id,field_name from dov_discogs_fields where field_name like "Sell%"')
+
+get_new_instance_notes = ('SELECT DISTINCT instance_id, notes '
+                                            'FROM  dov_discogs_instances '
+                                            'WHERE notes != "None" and '
+                                            '    NOT EXISTS( SELECT instance_id '
+                                            '        FROM dov_sales_channel '
+                                            '        WHERE dov_sales_channel.instance_id = dov_discogs_instances.instance_id);')
+
+insert_sales_channels = ('INSERT INTO dov_sales_channel '
+                                        '(instance_id, sales_channels, create_date) '
+                                        'VALUES '
+                                        '(%(instance_id)s, %(sales_channels)s, %(create_date)s)')

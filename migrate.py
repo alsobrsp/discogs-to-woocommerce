@@ -30,12 +30,14 @@ def main():
     # Custom field name and ID, populate database
     getcustomfields()
 
-    # Update Instance Table
+    # Update Instance Table & Sales channel
     discogsImport(discogs_folder)
+    getsaleschannels()
+# TODO:    updatesaleschannel()
 
     # Populate release information
     discogs_new_releases()
-#    discogs_update_releases()
+# TODO:    discogs_update_releases()
 
     # TODO: get labels / flag for create 
     getgenres()
@@ -52,6 +54,36 @@ def main():
 
     pp.pprint(dbq.exec_db_query_dict(dbq.get_instance_info, '2757772'))
     sys.exit(0)
+
+def store_switcher(store_id,  stores):
+    switcher = stores
+    return switcher.get(store_id, None)
+
+def get_stores():
+    stores = {}
+    store_fields = dbq.exec_db_query_dict(dbq.get_store_fields,  qty="all")
+    for idx in range(len(store_fields)):
+        stores[store_fields[idx]['field_id']] = store_fields[idx]['field_name']
+    return stores
+
+def getsaleschannels():
+    stores = get_stores()
+    query = dbq.insert_sales_channels
+
+    db_instance_notes = dbq.exec_db_query_dict(dbq.get_new_instance_notes,  qty="all")
+    for inst_idx in range(len(db_instance_notes)):
+        channels = {}
+        notes = list(eval(db_instance_notes[inst_idx]['notes']))
+        for notes_idx in range(len(notes)):
+            store = store_switcher(notes[notes_idx]['field_id'],  stores)
+            if store != None:
+                notes[notes_idx]['value']
+                channels[store] = notes[notes_idx]['value']
+
+        query_data = {'instance_id': db_instance_notes[inst_idx]['instance_id'],
+                                'sales_channels': str(channels),
+                                'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        dbq.exec_db_query(query, query_data, query_type='insert')
 
 
 # Hash instance notes
