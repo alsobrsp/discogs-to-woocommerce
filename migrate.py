@@ -82,7 +82,7 @@ def getsaleschannels():
 
         query_data = {'instance_id': db_instance_notes[inst_idx]['instance_id'],
                                 'sales_channels': str(channels),
-                                'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                                'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         dbq.exec_db_query(query, query_data, query_type='insert')
 
 
@@ -121,7 +121,7 @@ def discogs_new_releases():
                                     'url': str(release.url),
                                     'discogs_date_added': release.date_added, 
                                     'discogs_date_changed': release.date_changed, 
-                                    'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                                    'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         
         dbq.exec_db_query(dbq.import_new_release,  release_data, query_type='insert')
 
@@ -145,7 +145,7 @@ def discogs_update_releases():
                                     'url': str(release.url),
                                     'discogs_date_added': release.date_added, 
                                     'discogs_date_changed': release.date_changed, 
-                                    'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                                    'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         
         dbq.exec_db_query(dbq.import_update_release,  release_data, query_type='insert')
 
@@ -186,7 +186,7 @@ def discogsImport (discogs_folder):
                                     'notes': str(album.notes),
                                     'notes_chksum': notes_chksum.hexdigest(),
                                     'release_id': album.id, 
-                                    'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                                    'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             query = dbq.add_instance
 
         # Update notes if hash is different
@@ -257,7 +257,7 @@ def getcustomfields():
             query = dbq.custom_field_insert
             query_data = {'field_id': user.collection_fields[idx].id,
                                      'field_name': user.collection_fields[idx].name, 
-                                     'create_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')  }
+                                     'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')  }
 
         elif db_instance['field_name'] != user.collection_fields[idx].name :
             query = dbq.custom_field_update

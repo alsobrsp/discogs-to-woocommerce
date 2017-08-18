@@ -60,8 +60,8 @@ def exec_db_query_dict(query, query_data=None,  qty="one"):
 
 # Add instance 
 add_instance = ('INSERT INTO dov_discogs_instances '
-                           '(instance_id, rating, title, folder_id, discogs_date_added, notes, notes_chksum, release_id, create_date) '
-                           'VALUES (%(instance_id)s, %(rating)s, %(title)s, %(folder_id)s, %(discogs_date_added)s, %(notes)s, %(notes_chksum)s, %(release_id)s, %(create_date)s)')
+                           '(instance_id, rating, title, folder_id, discogs_date_added, notes, notes_chksum, release_id, insert_date) '
+                           'VALUES (%(instance_id)s, %(rating)s, %(title)s, %(folder_id)s, %(discogs_date_added)s, %(notes)s, %(notes_chksum)s, %(release_id)s, %(insert_date)s)')
 
 update_instance_woo_id = ('UPDATE dov_discogs_instances '
                                             'SET woo_id = %(woo_id)s '
@@ -90,8 +90,8 @@ get_field_list = ('select * from dov_discogs_fields')
 
 # Insert custom fields to db
 custom_field_insert = ('INSERT INTO dov_discogs_fields '
-                                     '(field_id, field_name, create_date) '
-                                     'VALUES (%(field_id)s, %(field_name)s, %(create_date)s)')
+                                     '(field_id, field_name, insert_date) '
+                                     'VALUES (%(field_id)s, %(field_name)s, %(insert_date)s)')
 
 # Update custom fields in db
 custom_field_update = ('UPDATE dov_discogs_fields '
@@ -105,9 +105,9 @@ get_new_release_list = ('select DISTINCT release_id from dov_discogs_instances w
                                        'where dov_discogs_releases.release_id = dov_discogs_instances.release_id)')
                                        
 import_new_release = ('INSERT INTO dov_discogs_releases '
-                                     '(release_id, title, artists, labels, styles, genres, url, discogs_date_added, discogs_date_changed, create_date) '
+                                     '(release_id, title, artists, labels, styles, genres, url, discogs_date_added, discogs_date_changed, insert_date) '
                                      'VALUES '
-                                     '(%(release_id)s, %(title)s, %(artists)s, %(labels)s, %(styles)s, %(genres)s, %(url)s, %(discogs_date_added)s, %(discogs_date_changed)s, %(create_date)s)')
+                                     '(%(release_id)s, %(title)s, %(artists)s, %(labels)s, %(styles)s, %(genres)s, %(url)s, %(discogs_date_added)s, %(discogs_date_changed)s, %(insert_date)s)')
 
 # Genres
 get_release_genres = ('select genres from dov_discogs_releases')
@@ -132,6 +132,6 @@ get_new_instance_notes = ('SELECT DISTINCT instance_id, notes '
                                             '        WHERE dov_sales_channel.instance_id = dov_discogs_instances.instance_id);')
 
 insert_sales_channels = ('INSERT INTO dov_sales_channel '
-                                        '(instance_id, sales_channels, create_date) '
+                                        '(instance_id, sales_channels, insert_date) '
                                         'VALUES '
-                                        '(%(instance_id)s, %(sales_channels)s, %(create_date)s)')
+                                        '(%(instance_id)s, %(sales_channels)s, %(insert_date)s)')
