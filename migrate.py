@@ -44,7 +44,7 @@ def main():
     # TODO: get labels / flag for create 
 
     # TODO: get genres / flag for create attribute
-    getgenres()
+    getattribs("genres")
     
     # TODO: getstyles()
     
@@ -225,16 +225,19 @@ def getInstanceData(instance_id):
 
 
 # TODO: insert into temp table, use insert/select to copy new to master table
-def getgenres():
+def getattribs(attrib_name):
     query_data = []
-    dbgenres = dbq.exec_db_query(dbq.get_release_genres,  qty='all')
-    for idx1 in range(len(dbgenres)):
-        genrerow = eval(dbgenres[idx1][0])
-        for idx2 in range(len(genrerow)):
-            query_data.append(genrerow[idx2])
+    query = dbq.get_discogs_attribs.format(attrib_name)
+    dbattribs = dbq.exec_db_query(query,  qty='all')
+
+    for idx1 in range(len(dbattribs)):
+        row = eval(dbattribs[idx1][0])
+        for idx2 in range(len(row)):
+            query_data.append(row[idx2])
+
     query_data = list(zip(set(query_data)))
     insert_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    query_data = [ ('genre',) + xs + (insert_date,) for xs in query_data]
+    query_data = [ (attrib_name,) + xs + (insert_date,) for xs in query_data]
     query = dbq.insert_attribs_tmp
     dbq.exec_db_query(query, query_data, query_type="insert", query_many="yes")
 

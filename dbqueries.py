@@ -112,7 +112,7 @@ import_new_release = ('INSERT INTO dov_discogs_releases '
                                      '(%(release_id)s, %(title)s, %(artists)s, %(labels)s, %(styles)s, %(genres)s, %(url)s, %(discogs_date_added)s, %(discogs_date_changed)s, %(insert_date)s)')
 
 # Genres
-get_release_genres = ('select genres from dov_discogs_releases')
+get_discogs_attribs = ('select {0} from dov_discogs_releases')
 
 insert_attribs_tmp = ('insert into dov_woo_attribs_tmp (attrib_name, attrib_term, insert_date) values (%s, %s, %s)')
 
