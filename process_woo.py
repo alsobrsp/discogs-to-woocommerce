@@ -2,7 +2,7 @@
 # TODO: Instances that are no longer in a store folder should be deactivated in the store
 
 from __future__ import print_function
-#from datetime import datetime
+from datetime import datetime
 import discogs_client
 # import os
 import pprint
@@ -33,8 +33,8 @@ def main():
     # TODO: create catagories
     
     # TODO: create new products
-    db_new_products = dbq.exec_db_query_dict(dbq.get_new_woo_instances,  qty="all")
-    create_new_products(db_new_products)
+#    db_new_products = dbq.exec_db_query_dict(dbq.get_new_woo_instances,  qty="all")
+#    create_new_products(db_new_products)
     # TODO: update / reactivate existing products 
     # TODO: deactivate removed products
     # TODO: Sold products Woo -> Discogs
@@ -87,18 +87,22 @@ def get_woo_attributes_list():
         woo_attributes_list[attributes[idx]['name']] = attributes[idx]['id']
     return woo_attributes_list
 
-def update_attrib_term_list(attrib_type,  attrib_id):
+def update_attrib_term_list(attrib_name,  attrib_id):
     """
     Passed the Woo attribute type and woo id, query attribute table for new terms and populate Woo
     """
-    query_data = attrib_type
+    query_data = attrib_name
     query = dbq.woo_get_new_attribs
     new_terms = dbq.exec_db_query_dict(query, query_data, qty="all")
     for idx in range(len(new_terms)):
-        print(new_terms[idx]['id'], new_terms[idx]['attrib_term'] )
+        data = {"name": new_terms[idx]['attrib_term']}
+        created = wcapi.post("products/attributes/" + str(attrib_id) + "/terms", data).json()
+        query_data = {'woo_attrib_id': created["id"], 
+                                'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                'id':  new_terms[idx]['id'] }
+        query = dbq.update_attribs_woo_id
+        dbq.exec_db_query(query, query_data, query_type='insert')
     
-    print(attrib_id)
-    pass
     
     
 if __name__ == "__main__":

@@ -128,6 +128,11 @@ truncate_attribs_tmp = ('TRUNCATE dov_woo_attribs_tmp')
 
 woo_get_new_attribs = ('select id, attrib_term from dov_woo_attribs where attrib_name = %s and woo_attrib_id is Null')
 
+update_attribs_woo_id = ('update dov_woo_attribs '
+                                         'SET woo_attrib_id = %(woo_attrib_id)s, '
+                                         'update_date = %(update_date)s '
+                                         'WHERE id = %(id)s')
+
 # Sales Channels
 get_store_fields = ('select field_id,field_name from dov_discogs_fields where field_name like "Sell%"')
 
