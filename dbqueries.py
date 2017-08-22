@@ -113,15 +113,18 @@ import_new_release = ('INSERT INTO dov_discogs_releases '
 
 # Genres
 get_release_genres = ('select genres from dov_discogs_releases')
-insert_genres_tmp = ('insert into dov_discogs_genres_tmp (genre) values (%s)')
-update_genres = ('INSERT INTO dov_discogs_genres (genre) '
-                              'SELECT DISTINCT genre '
-                              'FROM dov_discogs_genres_tmp '
-                              'WHERE NOT EXISTS( SELECT genre '
-                              '      FROM dov_discogs_genres '
-                              '      WHERE dov_discogs_genres.genre = dov_discogs_genres_tmp.genre)')
 
-truncate_genres_tmp = ('TRUNCATE dov_discogs_genres_tmp')
+insert_attribs_tmp = ('insert into dov_woo_attribs_tmp (attrib_name, attrib_term, insert_date) values (%s, %s, %s)')
+
+update_attribs = ('INSERT INTO dov_woo_attribs (attrib_name, attrib_term, insert_date) '
+                              'SELECT DISTINCT attrib_name, attrib_term, insert_date '
+                              'FROM dov_woo_attribs_tmp '
+                              'WHERE NOT EXISTS( SELECT attrib_name, attrib_term '
+                              '      FROM dov_woo_attribs '
+                              '      WHERE dov_woo_attribs.attrib_name = dov_woo_attribs_tmp.attrib_name '
+                              '        and dov_woo_attribs.attrib_term = dov_woo_attribs_tmp.attrib_term)')
+
+truncate_attribs_tmp = ('TRUNCATE dov_woo_attribs_tmp')
 
 woo_get_new_attribs = ('select id, attrib_term from dov_woo_attribs where attrib_name = %s and woo_attrib_id is Null')
 

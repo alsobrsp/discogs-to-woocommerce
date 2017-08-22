@@ -30,20 +30,24 @@ def main():
     # Custom field name and ID, populate database
     getcustomfields()
 
-    # Update Instance Table & Sales channel
+    # Update Instance Table
     discogsImport(discogs_folder)
+    
+    # Process sales channels
     getsaleschannels()
-# TODO:    updatesaleschannel()
+    # TODO:    updatesaleschannel()
 
     # Populate release information
     discogs_new_releases()
-# TODO:    discogs_update_releases()
+    # TODO:    discogs_update_releases()
 
     # TODO: get labels / flag for create 
-    getgenres()
-
 
     # TODO: get genres / flag for create attribute
+    getgenres()
+    
+    # TODO: getstyles()
+    
     # TODO: get artists / flag for create
     # TODO: get decades? / flag for create
     # TODO: populate catagories table
@@ -229,14 +233,16 @@ def getgenres():
         for idx2 in range(len(genrerow)):
             query_data.append(genrerow[idx2])
     query_data = list(zip(set(query_data)))
-    query = dbq.insert_genres_tmp
+    insert_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    query_data = [ ('genre',) + xs + (insert_date,) for xs in query_data]
+    query = dbq.insert_attribs_tmp
     dbq.exec_db_query(query, query_data, query_type="insert", query_many="yes")
 
     # insert new genres
-    dbq.exec_db_query(dbq.update_genres)
+    dbq.exec_db_query(dbq.update_attribs)
 
     # Truncate temp table
-    dbq.exec_db_query(dbq.truncate_genres_tmp)
+    dbq.exec_db_query(dbq.truncate_attribs_tmp)
 
 def getinstancelist():
     """
