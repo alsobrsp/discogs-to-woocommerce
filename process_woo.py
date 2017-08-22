@@ -9,6 +9,7 @@ import pprint
 import sys
 import dbqueries as dbq
 # import hashlib
+from woocommerce import API
 
 # Import config
 from config import *
@@ -24,9 +25,16 @@ user = discogs.identity()
 
 def main():
     # TODO: Process Woo
+    # Get woo attributes, name to id mapping
+    woo_attributes_list = get_woo_attributes_list()
+    # TODO: Genres to attributes
+    update_attrib_term_list('genre', woo_attributes_list['Genre'])
+
     # TODO: create catagories
+    
     # TODO: create new products
-    create_product()
+    db_new_products = dbq.exec_db_query_dict(dbq.get_new_woo_instances,  qty="all")
+    create_new_products(db_new_products)
     # TODO: update / reactivate existing products 
     # TODO: deactivate removed products
     # TODO: Sold products Woo -> Discogs
@@ -43,8 +51,21 @@ def updateWooProduct(instance_id):
     pass
 
 # Create Product
-def createWooProduct (instance_id):
-    pass
+def create_new_products (db_new_products):
+    """
+    Take list of new instance id's, create product page and update instance table with Woo ID
+    """
+    for idx in range(len(db_new_products)):
+        # Get instance data from db
+        instance_data = dbq.exec_db_query_dict(dbq.get_instance_info,  db_new_products[idx]['instance_id'])
+        # Get release data from db
+        release_data = dbq.exec_db_query_dict(dbq.get_release_info, instance_data['release_id'])
+        
+        pp.pprint(instance_data)
+        pp.pprint(release_data)
+        
+        
+    
     # Create Woo Product
 #   data = {
 #        "name": "Premium Quality",
@@ -56,8 +77,30 @@ def createWooProduct (instance_id):
 #    
 #   product = wcapi.post("products", data).json()
     
+def formatproduct():
+    pass
+    
+def get_woo_attributes_list():
+    woo_attributes_list = {}
+    attributes = wcapi.get("products/attributes").json()
+    for idx in range(len(attributes)):
+        woo_attributes_list[attributes[idx]['name']] = attributes[idx]['id']
+    return woo_attributes_list
 
-
+def update_attrib_term_list(attrib_type,  attrib_id):
+    """
+    Passed the Woo attribute type and woo id, query attribute table for new terms and populate Woo
+    """
+    query_data = attrib_type
+    query = dbq.woo_get_new_attribs
+    new_terms = dbq.exec_db_query_dict(query, query_data, qty="all")
+    for idx in range(len(new_terms)):
+        print(new_terms[idx]['id'], new_terms[idx]['attrib_term'] )
+    
+    print(attrib_id)
+    pass
+    
+    
 if __name__ == "__main__":
     main()
 

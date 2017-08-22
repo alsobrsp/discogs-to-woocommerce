@@ -70,6 +70,8 @@ update_instance_woo_id = ('UPDATE dov_discogs_instances '
 get_all_instance_list = ('select * from dov_discogs_instances')
 get_instance_info = ('select * from dov_discogs_instances WHERE instance_id = %s')
 
+get_release_info = ('select * from dov_discogs_releases WHERE release_id = %s')
+
 update_instance_notes_chksum = ('UPDATE dov_discogs_instances '
                                                         'SET notes = %(notes)s, '
                                                         'notes_chksum = %(notes_chksum)s, '
@@ -121,6 +123,8 @@ update_genres = ('INSERT INTO dov_discogs_genres (genre) '
 
 truncate_genres_tmp = ('TRUNCATE dov_discogs_genres_tmp')
 
+woo_get_new_attribs = ('select id, attrib_term from dov_woo_attribs where attrib_name = %s and woo_attrib_id is Null')
+
 # Sales Channels
 get_store_fields = ('select field_id,field_name from dov_discogs_fields where field_name like "Sell%"')
 
@@ -135,3 +139,9 @@ insert_sales_channels = ('INSERT INTO dov_sales_channel '
                                         '(instance_id, sales_channels, insert_date) '
                                         'VALUES '
                                         '(%(instance_id)s, %(sales_channels)s, %(insert_date)s)')
+                                        
+# Woo queries
+get_new_woo_instances = ('SELECT A.instance_id, B.sales_channels '
+                                            'FROM dov_discogs_instances A  '
+                                            'INNER JOIN dov_sales_channel B ON A.instance_id = B.instance_id '
+                                            'where A.woo_id is Null and ( B.sales_channels like "%DoV\': \'List%" or B.sales_channels like "%DoV\': \'Yes%")')
