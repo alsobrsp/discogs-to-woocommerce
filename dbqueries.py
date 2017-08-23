@@ -140,16 +140,30 @@ get_new_instance_notes = ('SELECT DISTINCT instance_id, notes '
                                             'FROM  dov_discogs_instances '
                                             'WHERE notes != "None" and '
                                             '    NOT EXISTS( SELECT instance_id '
-                                            '        FROM dov_sales_channel '
-                                            '        WHERE dov_sales_channel.instance_id = dov_discogs_instances.instance_id);')
+                                            '        FROM dov_sales_channels '
+                                            '        WHERE dov_sales_channels.instance_id = dov_discogs_instances.instance_id);')
 
-insert_sales_channels = ('INSERT INTO dov_sales_channel '
+insert_sales_channels = ('INSERT INTO dov_sales_channels '
                                         '(instance_id, sales_channels, insert_date) '
                                         'VALUES '
                                         '(%(instance_id)s, %(sales_channels)s, %(insert_date)s)')
                                         
+get_updated_instance_notes = ('SELECT DISTINCT instance_id, notes '
+                                                   'FROM dov_discogs_instances '
+                                                   'WHERE notes != "None" '
+                                                   '       AND EXISTS( SELECT instance_id '
+                                                   '       FROM dov_sales_channels '
+                                                   '       WHERE dov_sales_channels.instance_id = dov_discogs_instances.instance_id '
+                                                   '               and dov_sales_channels.update_date < dov_discogs_instances.update_date);')
+
+update_sales_channels = ('UPDATE dov_sales_channels '
+                                          'SET sales_channels = %(sales_channels)s, '
+                                          'update_date = %(update_date)s '
+                                          'where instance_id = %(instance_id)s')
+                                        
+
 # Woo queries
 get_new_woo_instances = ('SELECT A.instance_id, B.sales_channels '
                                             'FROM dov_discogs_instances A  '
-                                            'INNER JOIN dov_sales_channel B ON A.instance_id = B.instance_id '
+                                            'INNER JOIN dov_sales_channels B ON A.instance_id = B.instance_id '
                                             'where A.woo_id is Null and ( B.sales_channels like "%DoV\': \'List%" or B.sales_channels like "%DoV\': \'Yes%")')

@@ -34,8 +34,9 @@ def main():
     discogsImport(discogs_folder)
     
     # Process sales channels
-    getsaleschannels()
-    # TODO:    updatesaleschannel()
+    stores = get_stores()
+    saleschannels("new", stores)
+    saleschannels("update", stores)
 
     # Populate release information
     discogs_new_releases()
@@ -56,7 +57,6 @@ def main():
     # TODO: Move sold to zz Sold folder
     # TODO: Get images
 
-    pp.pprint(dbq.exec_db_query_dict(dbq.get_instance_info, '2757772'))
     sys.exit(0)
 
 def store_switcher(store_id,  stores):
@@ -70,11 +70,20 @@ def get_stores():
         stores[store_fields[idx]['field_id']] = store_fields[idx]['field_name']
     return stores
 
-def getsaleschannels():
-    stores = get_stores()
-    query = dbq.insert_sales_channels
+def saleschannels(type,  stores):
+    """
+    Type is either new or update
+    """
+    if type == "new":
+        query = dbq.insert_sales_channels
+        get_query = dbq.get_new_instance_notes
+        date_field = "insert_date"
+    elif type == "update":
+        query = dbq.update_sales_channels
+        get_query = dbq.get_updated_instance_notes
+        date_field = "update_date"
 
-    db_instance_notes = dbq.exec_db_query_dict(dbq.get_new_instance_notes,  qty="all")
+    db_instance_notes = dbq.exec_db_query_dict(get_query,  qty="all")
     for inst_idx in range(len(db_instance_notes)):
         channels = {}
         notes = list(eval(db_instance_notes[inst_idx]['notes']))
@@ -86,9 +95,8 @@ def getsaleschannels():
 
         query_data = {'instance_id': db_instance_notes[inst_idx]['instance_id'],
                                 'sales_channels': str(channels),
-                                'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                                date_field: datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         dbq.exec_db_query(query, query_data, query_type='insert')
-
 
 # Hash instance notes
 def hashNotes(instance_notes):
@@ -105,7 +113,7 @@ def hashNotes(instance_notes):
         return notes_chksum
     finally:
         del notes_chksum
-
+# TODO: Fix how artists and labels are stored.
 def discogs_new_releases():
     """
     Get/Update release table
@@ -224,7 +232,7 @@ def getInstanceData(instance_id):
     return instance_data
 
 
-# TODO: insert into temp table, use insert/select to copy new to master table
+# TODO: This is not working for labels and artists. The formating is wrong on the db data
 def getattribs(attrib_name):
     query_data = []
     query = dbq.get_discogs_attribs.format(attrib_name)
