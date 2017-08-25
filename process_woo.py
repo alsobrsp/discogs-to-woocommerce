@@ -8,6 +8,7 @@ import discogs_client
 import pprint
 import sys
 import dbqueries as dbq
+import dblog
 # import hashlib
 from woocommerce import API
 import htmlgen
@@ -36,9 +37,14 @@ def main():
 
     # TODO: create catagories
     
-    # TODO: create new products
+    # create new products
     db_new_products = dbq.exec_db_query_dict(dbq.get_new_woo_instances,  qty="all")
     create_new_products(db_new_products)
+    
+    # Update existing products
+#    db_update_products = dbq.exec_db_query_dict(dbq.get_update_woo_instances,  qty="all")
+#    update_products(db_update_products)
+    
     # TODO: group multiple products? SELECT release_id, title, COUNT(*) copies FROM dov_discogs_instances GROUP BY release_id HAVING copies > 1;
     # TODO: update / reactivate existing products 
     # TODO: Cross/Up sell items
@@ -79,8 +85,9 @@ def create_new_products(db_new_products):
         
         # Update DB with Woo Product ID
         query_data = {"woo_id":  product['id'], 
-                                "instance_id": db_new_products[idx]['instance_id']}
-        query = dbq.update_instance_woo_id
+                                "instance_id": db_new_products[idx]['instance_id'], 
+                                "insert_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        query = dbq.insert_woo_instance_product
         dbq.exec_db_query(query, query_data, query_type='insert')
 
 def format_generic(object):
@@ -89,7 +96,10 @@ def format_generic(object):
     """
     html_string = ""
     for idx in range(len(object)):
-        html_string += str(htmlgen.Link(object[idx].url,  object[idx].name))
+        if object[idx].id == 0:
+            html_string += object[idx].name
+        else:
+            html_string += str(htmlgen.Link(object[idx].url,  object[idx].name))
         if 'catno' in dir(object[idx]):
             html_string += ': {0}\n'.format(object[idx].catno)
         else:

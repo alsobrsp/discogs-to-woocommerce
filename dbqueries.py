@@ -174,10 +174,13 @@ update_sales_channels = ('UPDATE dov_sales_channels '
 
 # Woo queries
 get_new_woo_instances = ('SELECT A.instance_id, A.release_id, B.sales_channels '
-                                            'FROM dov_discogs_instances A  '
+                                            'FROM dov_discogs_instances A '
                                             'INNER JOIN dov_sales_channels B ON A.instance_id = B.instance_id '
-                                            'where A.woo_id is Null and ( B.sales_channels like "%DoV\': \'List%" or B.sales_channels like "%DoV\': \'Yes%")')
+                                            'where ( B.sales_channels like "%DoV\': \'List%" or B.sales_channels like "%DoV\': \'Yes%") '
+                                            'and NOT EXISTS( SELECT instance_id FROM dov_woo_instances '
+                                            'WHERE dov_woo_instances.instance_id = A.instance_id)')
                                             
-update_instance_woo_id = ('UPDATE dov_discogs_instances '
-                                             'SET woo_id = %(woo_id)s '
-                                             'WHERE instance_id = %(instance_id)s')
+insert_woo_instance_product = ('INSERT INTO dov_woo_instances '
+                                                    '(instance_id, woo_id, insert_date) '
+                                                    'values (%(instance_id)s, %(woo_id)s, %(insert_date)s)')
+                                                    
