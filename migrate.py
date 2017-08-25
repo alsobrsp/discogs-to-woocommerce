@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # TODO: Create release updated table
-# TODO: Convert using custom fields for store designation
 # TODO: Can I remove the select in the instance loop? Load the instance table into a dict and test against that??? Line 143
-
 
 from __future__ import print_function
 from datetime import datetime
@@ -13,6 +11,7 @@ import pprint
 import sys
 # import traceback
 import dbqueries as dbq
+import dblog
 import hashlib
 
 # Import config
@@ -25,8 +24,10 @@ pp = pprint.PrettyPrinter(indent=4)
 discogs = discogs_client.Client(UserAgent, user_token=AuthToken)
 user = discogs.identity()
 
+process_name = "migrate"
 
 def main():
+    run_id = dblog.startup(process_name)
     # Custom field name and ID, populate database
     getcustomfields()
 
@@ -56,7 +57,7 @@ def main():
     # TODO: releases updated
     # TODO: Move sold to zz Sold folder
     # TODO: Get images
-
+    dblog.finished(run_id)
     sys.exit(0)
 
 def store_switcher(store_id,  stores):

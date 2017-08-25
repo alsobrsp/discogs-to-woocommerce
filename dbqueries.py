@@ -58,6 +58,16 @@ def exec_db_query_dict(query, query_data=None,  qty="one"):
     else:
         importdb.commit()
 
+# DB Log
+start_run = ('INSERT INTO dov_run_log '
+                    '(process, run_id, start_time) '
+                    'VALUES (%(process)s, %(run_id)s, %(start_time)s)')
+
+finish_run =('UPDATE dov_run_log '
+                    'SET finish_time = %(finish_time)s, complete = %(complete)s '
+                    'WHERE `run_id` = %(run_id)s')
+
+
 # Add instance 
 add_instance = ('INSERT INTO dov_discogs_instances '
                            '(instance_id, rating, title, folder_id, discogs_date_added, notes, notes_chksum, release_id, insert_date) '
@@ -163,7 +173,11 @@ update_sales_channels = ('UPDATE dov_sales_channels '
                                         
 
 # Woo queries
-get_new_woo_instances = ('SELECT A.instance_id, B.sales_channels '
+get_new_woo_instances = ('SELECT A.instance_id, A.release_id, B.sales_channels '
                                             'FROM dov_discogs_instances A  '
                                             'INNER JOIN dov_sales_channels B ON A.instance_id = B.instance_id '
                                             'where A.woo_id is Null and ( B.sales_channels like "%DoV\': \'List%" or B.sales_channels like "%DoV\': \'Yes%")')
+                                            
+update_instance_woo_id = ('UPDATE dov_discogs_instances '
+                                             'SET woo_id = %(woo_id)s '
+                                             'WHERE instance_id = %(instance_id)s')

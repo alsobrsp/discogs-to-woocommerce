@@ -24,7 +24,10 @@ wcapi = API(**wooconfig)
 discogs = discogs_client.Client(UserAgent, user_token=AuthToken)
 user = discogs.identity()
 
+process_name = "process woo"
+
 def main():
+    run_id = dblog.startup(process_name)
     # TODO: Process Woo
     # Get woo attributes, name to id mapping
     woo_attributes_list = get_woo_attributes_list()
@@ -42,6 +45,7 @@ def main():
     # TODO: Group items
     # TODO: deactivate removed products
     # TODO: Sold products Woo -> Discogs
+    dblog.finished(run_id)
     sys.exit(0)
 
 
