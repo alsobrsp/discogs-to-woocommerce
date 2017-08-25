@@ -184,3 +184,13 @@ insert_woo_instance_product = ('INSERT INTO dov_woo_instances '
                                                     '(instance_id, woo_id, insert_date) '
                                                     'values (%(instance_id)s, %(woo_id)s, %(insert_date)s)')
                                                     
+get_update_woo_instances =('SELECT A.instance_id, A.release_id, B.sales_channels, C.woo_id '
+                                                'FROM dov_discogs_instances A '
+                                                'INNER JOIN dov_sales_channels B ON A.instance_id = B.instance_id '
+                                                'INNER JOIN dov_woo_instances C ON A.instance_id = C.instance_id '
+                                                'WHERE B.update_date > C.update_date')
+
+update_woo_instance_product = ('UPDATE dov_woo_instances '
+                                                     'SET update_date = %(update_date)s '
+                                                     'WHERE instance_id = %(instance_id)s '
+                                                     'and woo_id = %(woo_id)s')

@@ -39,11 +39,11 @@ def main():
     
     # create new products
     db_new_products = dbq.exec_db_query_dict(dbq.get_new_woo_instances,  qty="all")
-    create_new_products(db_new_products)
+    process_products("new",  db_new_products)
     
     # Update existing products
-#    db_update_products = dbq.exec_db_query_dict(dbq.get_update_woo_instances,  qty="all")
-#    update_products(db_update_products)
+    db_update_products = dbq.exec_db_query_dict(dbq.get_update_woo_instances,  qty="all")
+    process_products("update", db_update_products)
     
     # TODO: group multiple products? SELECT release_id, title, COUNT(*) copies FROM dov_discogs_instances GROUP BY release_id HAVING copies > 1;
     # TODO: update / reactivate existing products 
@@ -65,29 +65,37 @@ def updateWooProduct(instance_id):
     pass
 
 # Create Product
-def create_new_products(db_new_products):
+def process_products(type,  db_products):
     """
     Take list of new instance id's, create product page and update instance table with Woo ID
     """
-    for idx in range(len(db_new_products)):
+    if type == "new":
+        query = dbq.insert_woo_instance_product
+        date_field = "insert_date"
+    elif type == "update":
+        query = dbq.update_woo_instance_product
+        date_field = "update_date"
+    
+    for idx in range(len(db_products)):
         # Get instance data from db
-        instance_data = dbq.exec_db_query_dict(dbq.get_instance_info,  db_new_products[idx]['instance_id'])
+        instance_data = dbq.exec_db_query_dict(dbq.get_instance_info,  db_products[idx]['instance_id'])
 
         # Get release data from Discogs
         # release_data = dbq.exec_db_query_dict(dbq.get_release_info, instance_data['release_id'])
-        release_data = discogs.release(db_new_products[idx]['release_id'])
+        release_data = discogs.release(db_products[idx]['release_id'])
 
         # Send data to formater
         product_data = formatproduct(instance_data, release_data)
 
         # Create Woo Product
-        product = wcapi.post("products", product_data).json()
+        product_endpoint = ("products/" + str(db_products[idx]['woo_id']))
+        woo_product = wcapi.post(product_endpoint, product_data).json()
         
         # Update DB with Woo Product ID
-        query_data = {"woo_id":  product['id'], 
-                                "instance_id": db_new_products[idx]['instance_id'], 
-                                "insert_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-        query = dbq.insert_woo_instance_product
+        query_data = {"woo_id":  woo_product['id'], 
+                                "instance_id": db_products[idx]['instance_id'], 
+                                date_field: datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
         dbq.exec_db_query(query, query_data, query_type='insert')
 
 def format_generic(object):
@@ -96,7 +104,7 @@ def format_generic(object):
     """
     html_string = ""
     for idx in range(len(object)):
-        if object[idx].id == 0:
+        if object[idx].id == 0 or object[idx].id == 194 :
             html_string += object[idx].name
         else:
             html_string += str(htmlgen.Link(object[idx].url,  object[idx].name))
@@ -167,7 +175,7 @@ def formatproduct(instance_data, release_data):
     # TODO: some traks have extraartists in credits
 #    tracklist = release_data.tracklist
     # Discogs release URL
-    url = "<a href=\"" + release_data.url + "\"_blank\">Discogs release info</a>"
+    url = str(htmlgen.Link(release_data.url,  release_data.artists[0].name + " - " + release_data.title))
     # TODO: Embed videos
 #    videos = release_data.videos
 
