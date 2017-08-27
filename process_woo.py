@@ -88,7 +88,10 @@ def process_products(type,  db_products):
         product_data = formatproduct(instance_data, release_data)
 
         # Create Woo Product
-        product_endpoint = ("products/" + str(db_products[idx]['woo_id']))
+        if type == "new":
+            product_endpoint = "products"
+        elif type == "update":
+            product_endpoint = ("products/" + str(db_products[idx]['woo_id']))
         woo_product = wcapi.post(product_endpoint, product_data).json()
         
         # Update DB with Woo Product ID
