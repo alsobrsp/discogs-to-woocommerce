@@ -49,6 +49,7 @@ def main():
     getattribs("genres")
     
     # TODO: getstyles()
+    getattribs("styles")
     
     # TODO: get artists / flag for create
     # TODO: get decades? / flag for create
@@ -114,6 +115,8 @@ def hashNotes(instance_notes):
         return notes_chksum
     finally:
         del notes_chksum
+
+
 # TODO: Fix how artists and labels are stored.
 def discogs_new_releases():
     """
@@ -241,8 +244,9 @@ def getattribs(attrib_name):
 
     for idx1 in range(len(dbattribs)):
         row = eval(dbattribs[idx1][0])
-        for idx2 in range(len(row)):
-            query_data.append(row[idx2])
+        if row != None:
+            for idx2 in range(len(row)):
+                query_data.append(row[idx2])
 
     query_data = list(zip(set(query_data)))
     insert_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
