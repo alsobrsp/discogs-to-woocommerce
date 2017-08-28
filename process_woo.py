@@ -12,6 +12,7 @@ import dblog
 # import hashlib
 from woocommerce import API
 import htmlgen
+from utilities import *
 
 # Import config
 from config import *
@@ -28,6 +29,7 @@ user = discogs.identity()
 process_name = "process woo"
 
 def main():
+    check_db_version()
     run_id = dblog.startup(process_name)
     # TODO: Process Woo
     # Get woo attributes, name to id mapping

@@ -1,3 +1,5 @@
+db_version=1.1
+
 # DB connection setup
 dbconfig = {'user': 'alsobrsp', 
                 'password': 'spanky5', 

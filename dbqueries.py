@@ -57,6 +57,9 @@ def exec_db_query_dict(query, query_data=None,  qty="one"):
 
     else:
         importdb.commit()
+        
+# Check db version
+get_db_version = ('select value from dov_settings where setting = "db_version" and value = %s')
 
 # DB Log
 start_run = ('INSERT INTO dov_run_log '

@@ -13,6 +13,7 @@ import sys
 import dbqueries as dbq
 import dblog
 import hashlib
+from utilities import *
 
 # Import config
 from config import *
@@ -27,6 +28,7 @@ user = discogs.identity()
 process_name = "migrate"
 
 def main():
+    check_db_version()
     run_id = dblog.startup(process_name)
     # Custom field name and ID, populate database
     getcustomfields()
@@ -60,6 +62,7 @@ def main():
     # TODO: Get images
     dblog.finished(run_id)
     sys.exit(0)
+    
 
 def store_switcher(store_id,  stores):
     switcher = stores
