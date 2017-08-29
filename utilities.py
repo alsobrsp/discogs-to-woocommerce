@@ -15,3 +15,7 @@ def check_db_version():
         if test is None:
             print("Update the database to version: " + str(db_version))
             sys.exit(10)
+
+def dict_switcher(key,  data):
+    switcher = data
+    return switcher.get(key, None)

@@ -63,11 +63,6 @@ def main():
     dblog.finished(run_id)
     sys.exit(0)
     
-
-def store_switcher(store_id,  stores):
-    switcher = stores
-    return switcher.get(store_id, None)
-
 def get_stores():
     stores = {}
     store_fields = dbq.exec_db_query_dict(dbq.get_store_fields,  qty="all")
@@ -93,7 +88,7 @@ def saleschannels(type,  stores):
         channels = {}
         notes = list(eval(db_instance_notes[inst_idx]['notes']))
         for notes_idx in range(len(notes)):
-            store = store_switcher(notes[notes_idx]['field_id'],  stores)
+            store = dict_switcher(notes[notes_idx]['field_id'],  stores)
             if store != None:
                 notes[notes_idx]['value']
                 channels[store] = notes[notes_idx]['value']
