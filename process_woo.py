@@ -31,11 +31,14 @@ process_name = "process woo"
 def main():
     check_db_version()
     run_id = dblog.startup(process_name)
-    # TODO: Process Woo
+
+    # Manually create attribute name
     # Get woo attributes, name to id mapping
     woo_attributes_list = get_woo_attributes_list()
-    # TODO: Genres to attributes
+    # Genres to attribute terms
     update_attrib_term_list('genres', woo_attributes_list['Genre'])
+    # Styles to attribute terms
+    update_attrib_term_list('styles', woo_attributes_list['Styles'])
 
     # TODO: create catagories
     
@@ -48,6 +51,7 @@ def main():
     process_products("update", db_update_products)
     
     # TODO: group multiple products? SELECT release_id, title, COUNT(*) copies FROM dov_discogs_instances GROUP BY release_id HAVING copies > 1;
+    # TODO: Calculate and set pricing
     # TODO: update / reactivate existing products 
     # TODO: Cross/Up sell items
     # TODO: Group items
@@ -167,15 +171,15 @@ def formatproduct(instance_data, release_data):
     companies = format_generic(release_data.companies)
     # Extra Artists / Credits
     credits = format_generic(release_data.credits)
-    # Formats
+    #  TODO: move Formats to attibutes    
     formats = format_formats(release_data.formats)
-    # TODO: move to attibutes
+    # TODO: move genres to attibutes
     genres = str(release_data.genres)
     # Identifiers - barcodes, runouts and such
     identifiers = format_identifiers(release_data.identifiers)
     # Labels
     labels = format_generic(release_data.labels)
-    # TODO: move to attibutes    
+    # TODO: move styles to attibutes    
     styles = str(release_data.styles)
     # TODO: some traks have extraartists in credits
 #    tracklist = release_data.tracklist
@@ -212,7 +216,6 @@ def formatproduct(instance_data, release_data):
     # Genres, ....
     attributes = [{}]
     
-    # TODO: First pass will only use index 0 for any entry. Should be updated to show all where appropriate
     data = {"name": release_data.artists[0].name + " - " + release_data.title, 
                   "description": description, 
                   "short_description": str(short_description), 
