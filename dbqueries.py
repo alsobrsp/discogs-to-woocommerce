@@ -197,3 +197,5 @@ update_woo_instance_product = ('UPDATE dov_woo_instances '
                                                      'SET update_date = %(update_date)s '
                                                      'WHERE instance_id = %(instance_id)s '
                                                      'and woo_id = %(woo_id)s')
+
+get_woo_db_attribs = ('select attrib_name, attrib_term, woo_attrib_id from dov_woo_attribs where woo_attrib_id is not Null')

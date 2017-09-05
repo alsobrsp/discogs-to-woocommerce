@@ -4,6 +4,7 @@
 from __future__ import print_function
 from datetime import datetime
 import discogs_client
+from collections import defaultdict
 # import os
 import pprint
 import sys
@@ -39,6 +40,13 @@ def main():
     update_attrib_term_list('genres', woo_attributes_list['Genre'])
     # Styles to attribute terms
     update_attrib_term_list('styles', woo_attributes_list['Styles'])
+    
+    # Get attrib term id dict. from collections import defaultdict
+    global attrib_ids
+    attrib_ids = get_attrib_ids()
+    # FIXME: I don't need to assign terms, they can be assigned during product creation and update
+    # We do need to poll for the attribute ID Genres = 2 sort of thing.
+    # pp.pprint(wcapi.get("products/attributes").json())
 
     # TODO: create catagories
     
@@ -59,6 +67,14 @@ def main():
     # TODO: Sold products Woo -> Discogs
     dblog.finished(run_id)
     sys.exit(0)
+
+# Attribute id list
+def get_attrib_ids():
+    attrib_ids = defaultdict(dict)
+    attrib_fields = dbq.exec_db_query_dict(dbq.get_woo_db_attribs,  qty="all")
+    for idx in range(len(attribs_fields)):
+        attrib_ids[attrib_fields[idx]['attrib_name']][attrib_fields[idx]['attrib_term']] = attrib_fields[idx]['woo_attrib_id']
+    return attrib_ids
 
 
 # TODO: Update woo_id
