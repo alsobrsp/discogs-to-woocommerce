@@ -37,7 +37,7 @@ def main():
     # Get woo attributes, name to id mapping
     woo_attributes_list = get_woo_attributes_list()
     # Genres to attribute terms
-    update_attrib_term_list('genres', woo_attributes_list['Genre'])
+    update_attrib_term_list('genres', woo_attributes_list['Genres'])
     # Styles to attribute terms
     update_attrib_term_list('styles', woo_attributes_list['Styles'])
     
@@ -172,6 +172,12 @@ def format_instance_notes(object):
         if object[idx]['field_id'] == 3:
             notes += "Decades of Vinyl Notes\n{0}\n".format(object[idx]['value'])
     return notes
+    
+def format_atttributes(object,  attrib):
+    attrib_id = attrib_ids[attrib]
+    attribute = {'id': attrib_id, 'options': object}
+    return attribute
+
 
 def formatproduct(instance_data, release_data):
     """
@@ -186,14 +192,10 @@ def formatproduct(instance_data, release_data):
     credits = format_generic(release_data.credits)
     #  TODO: move Formats to attibutes    
     formats = format_formats(release_data.formats)
-    # TODO: move genres to attibutes
-    genres = str(release_data.genres)
     # Identifiers - barcodes, runouts and such
     identifiers = format_identifiers(release_data.identifiers)
     # Labels
     labels = format_generic(release_data.labels)
-    # TODO: move styles to attibutes    
-    styles = str(release_data.styles)
     # TODO: some traks have extraartists in credits
 #    tracklist = release_data.tracklist
     # Discogs release URL
@@ -209,11 +211,9 @@ def formatproduct(instance_data, release_data):
                             "Companies\n" + companies + "\n"
                             "Credits\n" + credits + "\n"
                             "Formats\n" + formats + "\n"
-                            "Genres: " + genres + " / This will moved to searchable attributes\n"
                             "Identifiers\n" + identifiers + "\n"
                             "Labels\n" + labels + "\n"
                             "Release Date: " + str(release_data.released) + "\n"
-                            "Styles\n" + styles + "\n"
 #                            "Tracklist\n" + tracklist + "\n"
                             "Discogs URL: " + url + "\n"
 #                            "Videos\n" + videos + "\n"
@@ -221,13 +221,16 @@ def formatproduct(instance_data, release_data):
                             "\n"
                             "Discogs release notes:\n" + str(release_data.notes) + "\n"
                             "**************\n"
-                            "All data pulled from Discogs"
+                            "All data and photos unless otherwise noted are from Discogs"
                             )
 
     images = format_image_array(release_data.images)
     
-    # Genres, ....
-    attributes = [{}]
+    # Genres
+    genres = format_atttributes(release_data.genres,  'Genres')
+    # Styles
+    styles = format_atttributes(release_data.styles,  'Styles')
+    attributes = [genres,  styles]
     
     data = {"name": release_data.artists[0].name + " - " + release_data.title, 
                   "description": description, 
