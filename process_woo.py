@@ -29,7 +29,7 @@ user = discogs.identity()
 
 process_name = "process woo"
 
-def main():
+def process_woo():
     check_db_version()
     run_id = dblog.startup(process_name)
 
@@ -339,5 +339,5 @@ def update_attrib_term_list(attrib_name,  attrib_id):
     
     
 if __name__ == "__main__":
-    main()
+    process_woo()
 

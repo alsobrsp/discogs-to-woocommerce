@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project DoV Discogs Import -->
-<!-- Saved: 2017-08-28, 15:26:07 -->
+<!-- Saved: 2017-09-09, 22:36:46 -->
 <!-- Copyright (C) 2017 ,  -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -18,6 +18,7 @@
     <Source>dbqueries.py</Source>
     <Source>migrate.py</Source>
     <Source>process_woo.py</Source>
+    <Source>run_all.py</Source>
     <Source>sample-config.py</Source>
     <Source>utilities.py</Source>
   </Sources>

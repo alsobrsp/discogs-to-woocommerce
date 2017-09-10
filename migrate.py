@@ -25,9 +25,9 @@ pp = pprint.PrettyPrinter(indent=4)
 discogs = discogs_client.Client(UserAgent, user_token=AuthToken)
 user = discogs.identity()
 
-process_name = "migrate"
+process_name = "migrate discogs"
 
-def main():
+def migrate_discogs():
     check_db_version()
     run_id = dblog.startup(process_name)
     # Custom field name and ID, populate database
@@ -291,5 +291,5 @@ def getcustomfields():
 
 
 if __name__ == "__main__":
-    main()
+    migrate_discogs()
 
