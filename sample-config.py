@@ -23,3 +23,14 @@ AuthToken = "DiSiupFPDVYxsOqpOtwjXmfENbNeLNfhhaCYqbso"
 
 # NOTE: This is the index not the id. folder 0 for ALL, 26 for 7up test
 discogs_folder=0
+
+
+# Value map
+condition_values = {"Mint (M)": 7,
+                                 "Near Mint (NM or M-)": 6,
+                                 "Very Good Plus (VG+)": 5,
+                                 "Very Good (VG)": 4,
+                                 "Good Plus (G+)": 3,
+                                 "Good (G)": 2,
+                                 "Fair (F)": 1,
+                                 "Poor (P)": 0}

@@ -178,6 +178,33 @@ def format_atttributes(object,  attrib):
     attribute = {'id': attrib_id, 'options': object}
     return attribute
 
+def format_pricing(notes,  suggestions):
+    pricing = {'regular': "", 'sale': ""}
+    notes = eval(notes)
+    # Get numeric values
+    for idx in range(len(notes)):
+        if notes[idx]['field_id'] == 1:
+            media_cond = notes[idx]['value']
+            media_num = condition_values[notes[idx]['value']]
+        if notes[idx]['field_id'] == 2:
+            #sleeve = notes[idx]['value']
+            if notes[idx]['value'] == 'Generic' or notes[idx]['value'] == 'No Cover':
+                sleeve_num = media_num
+            else:
+                sleeve_num = condition_values[notes[idx]['value']]
+            
+    # Regular pricing is just the media condition.
+    pricing['regular'] = format(round(suggestions[media_cond]['value'], 2))
+    
+    #Sale pricing is the average of the media and sleeve rounded down or if equal -1
+    sale_num = int((media_num + sleeve_num) / 2)
+    if sale_num == media_num:
+        sale_num = sale_num - 1
+    sale_cond = list(condition_values.keys())[list(condition_values.values()).index(sale_num)]
+    pricing['sale'] = format(round(suggestions[sale_cond]['value'], 2))
+    
+    return pricing
+
 
 def formatproduct(instance_data, release_data):
     """
@@ -232,12 +259,16 @@ def formatproduct(instance_data, release_data):
     styles = format_atttributes(release_data.styles,  'Styles')
     attributes = [genres,  styles]
     
+    price = format_pricing(instance_data['notes'], release_data.price_suggestions)
+    
     data = {"name": release_data.artists[0].name + " - " + release_data.title, 
                   "description": description, 
-                  "short_description": str(short_description), 
+                  "short_description": short_description, 
                   "sku": str(instance_data['instance_id']), 
                   "images": images, 
-                  "attributes": attributes}
+                  "attributes": attributes, 
+                  "regular_price": price['regular'], 
+                  "sale_price": price['sale']}
     '''
     name	string	Product name.
     slug	string	Product slug.
