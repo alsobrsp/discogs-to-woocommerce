@@ -11,7 +11,7 @@ CREATE TABLE `dov_settings` (
   `insert_date` timestamp NULL DEFAULT '0000-00-00 00:00:00',
   `update_date` timestamp NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 INSERT INTO `dov_settings` ( `setting`, `value`, `insert_date`)
 VALUES ('db_version', '1.1', now());
