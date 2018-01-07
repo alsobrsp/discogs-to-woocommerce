@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # TODO: Create release updated table
 # TODO: Can I remove the select in the instance loop? Load the instance table into a dict and test against that??? Line 143
+# FIXME: Handle release merges Instance ID: 189217788
 
 from __future__ import print_function
 from datetime import datetime
@@ -47,11 +48,15 @@ def migrate_discogs():
 
     # TODO: get labels / flag for create 
 
+    """ TODO: Remove this section
+    Attribute terms can be created on the fly and will match existing
+    
     # TODO: get genres / flag for create attribute
     getattribs("genres")
     
     # TODO: getstyles()
     getattribs("styles")
+    """
     
     # TODO: get artists / flag for create
     # TODO: get decades? / flag for create
@@ -61,7 +66,6 @@ def migrate_discogs():
     # TODO: Move sold to zz Sold folder
     # TODO: Get images
     dblog.finished(run_id)
-    sys.exit(0)
     
 def get_stores():
     stores = {}
@@ -124,7 +128,6 @@ def discogs_new_releases():
     import_new_releases = [i[0] for i in import_new_releases]
 
     for index in range(len(import_new_releases)):
-        print(import_new_releases[index])
         release = discogs.release(import_new_releases[index])
         release_data = {'release_id': release.id,
                                     'title': release.title,
@@ -148,7 +151,6 @@ def discogs_update_releases():
     import_new_releases = [i[0] for i in import_new_releases]
 
     for index in range(len(import_new_releases)):
-        print(import_new_releases[index])
         release = discogs.release(import_new_releases[index])
         release_data = {'release_id': release.id,
                                     'title': release.title,
@@ -203,24 +205,30 @@ def discogsImport (discogs_folder):
                                     'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             query = dbq.add_instance
 
-        # Update notes if hash is different
-        elif db_instance['instance_id'] == album.instance_id and db_instance['notes_chksum'] != notes_chksum.hexdigest():
-            pass
-            query_data = {'notes': str(album.notes),
-                                     'notes_chksum': notes_chksum.hexdigest(),
-                                     'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
-                                     'instance_id': album.instance_id}
+        # Test for existing and changed
+        elif db_instance['instance_id'] == album.instance_id and \
+              (
+              db_instance['notes_chksum'] != notes_chksum.hexdigest() or \
+              db_instance['folder_id'] != album.folder_id or \
+              db_instance['release_id'] != album.id
+              ):
+            # Update notes if hash is different
+            if db_instance['notes_chksum'] != notes_chksum.hexdigest():
+                query_data = {'notes': str(album.notes),
+                                         'notes_chksum': notes_chksum.hexdigest(),
+                                         'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
+                                         'instance_id': album.instance_id, 
+                                         'release_id':  album.id}
 
-            query = dbq.update_instance_notes_chksum
+                query = dbq.update_instance_notes_chksum
 
-        # Update folder id
-        elif db_instance['instance_id'] == album.instance_id and db_instance['folder_id'] != album.folder_id:
-            pass
-            query_data = {'folder_id': album.folder_id,
-                                     'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
-                                     'instance_id': album.instance_id}
+            # Update folder id
+            if db_instance['folder_id'] != album.folder_id:
+                query_data = {'folder_id': album.folder_id,
+                                         'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
+                                         'instance_id': album.instance_id}
 
-            query = dbq.update_instance_folder_id
+                query = dbq.update_instance_folder_id
 
         # Execute queries
         if query != None:
@@ -292,4 +300,5 @@ def getcustomfields():
 
 if __name__ == "__main__":
     migrate_discogs()
+    sys.exit(0)
 

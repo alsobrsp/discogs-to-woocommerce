@@ -33,6 +33,9 @@ def process_woo():
     check_db_version()
     run_id = dblog.startup(process_name)
 
+    """ TODO: Remove this section
+    Attribute terms can be created on the fly and will match existing
+    
     # Manually create attribute name
     # Get woo attributes, name to id mapping
     woo_attributes_list = get_woo_attributes_list()
@@ -40,6 +43,7 @@ def process_woo():
     update_attrib_term_list('genres', woo_attributes_list['Genres'])
     # Styles to attribute terms
     update_attrib_term_list('styles', woo_attributes_list['Styles'])
+    """
     
     # Get attrib id dict.
     global attrib_ids
@@ -63,7 +67,6 @@ def process_woo():
     # TODO: deactivate removed products
     # TODO: Sold products Woo -> Discogs
     dblog.finished(run_id)
-    sys.exit(0)
 
 # Attribute id list
 def get_attrib_ids():
@@ -104,7 +107,7 @@ def process_products(type,  db_products):
         release_data = discogs.release(db_products[idx]['release_id'])
 
         # Send data to formater
-        product_data = formatproduct(instance_data, release_data)
+        product_data = formatproduct(instance_data, release_data,  type)
 
         # Create Woo Product
         if type == "new":
@@ -126,10 +129,16 @@ def format_generic(object):
     """
     html_string = ""
     for idx in range(len(object)):
-        if object[idx].id == 0 or object[idx].id == 194 :
+#        if object[idx].id == 0 or object[idx].id == 194 :
+#            html_string += object[idx].name
+#        else:
+        try:
+            object_url = object[idx].url
+        except discogs_client.exceptions.HTTPError:
             html_string += object[idx].name
         else:
-            html_string += str(htmlgen.Link(object[idx].url,  object[idx].name))
+            html_string += str(htmlgen.Link(object_url,  object[idx].name))
+
         if 'catno' in dir(object[idx]):
             html_string += ': {0}\n'.format(object[idx].catno)
         else:
@@ -139,7 +148,11 @@ def format_generic(object):
 def format_formats(object):
     string = ""
     for idx in range(len(object)):
-        string = (object[idx]['name'] + ", " + ', '.join(object[idx]['descriptions']))
+        string += object[idx]['name']
+        if 'descriptions' in object[idx]:
+            string += (", " + ', '.join(object[idx]['descriptions']) + "\n")
+        else:
+            string += "\n"
     return string
     
 def format_identifiers(object):
@@ -157,8 +170,9 @@ def format_identifiers(object):
 
 def format_image_array(object):
     images = []
-    for idx in range(len(object)):
-        images.append({"src": object[idx]['uri'], "position": idx})
+    if object != None:
+        for idx in range(len(object)):
+            images.append({"src": object[idx]['uri'], "position": idx})
     return images
 
 def format_instance_notes(object):
@@ -181,32 +195,26 @@ def format_atttributes(object,  attrib):
 def format_pricing(notes,  suggestions):
     pricing = {'regular': "", 'sale': ""}
     notes = eval(notes)
-    # Get numeric values
+    media_cond = ""
+
+    # Get media condition
     for idx in range(len(notes)):
         if notes[idx]['field_id'] == 1:
             media_cond = notes[idx]['value']
-            media_num = condition_values[notes[idx]['value']]
-        if notes[idx]['field_id'] == 2:
-            #sleeve = notes[idx]['value']
-            if notes[idx]['value'] == 'Generic' or notes[idx]['value'] == 'No Cover':
-                sleeve_num = media_num
-            else:
-                sleeve_num = condition_values[notes[idx]['value']]
-            
-    # Regular pricing is just the media condition.
-    pricing['regular'] = format(round(suggestions[media_cond]['value'], 2))
-    
-    #Sale pricing is the average of the media and sleeve rounded down or if equal -1
-    sale_num = int((media_num + sleeve_num) / 2)
-    if sale_num == media_num:
-        sale_num = sale_num - 1
-    sale_cond = list(condition_values.keys())[list(condition_values.values()).index(sale_num)]
-    pricing['sale'] = format(round(suggestions[sale_cond]['value'], 2))
-    
+
+    if suggestions and media_cond != "":
+        # Regular pricing is just the media condition.
+        pricing['regular'] = format(round(suggestions[media_cond]['value'], 2))
+        if float(pricing['regular']) <= 1:
+            pricing['regular'] = str(2)
+        
+        # Sale price is a 10% discount
+        pricing['sale'] = format(round(float(pricing['regular'])*.90, 2))
+
     return pricing
 
 
-def formatproduct(instance_data, release_data):
+def formatproduct(instance_data, release_data,  type="new"):
     """
     This will take the instance, release, artist, and label data to build the product page
     TODO: Will need an object processor function, there are a number of array/object lists.
@@ -251,8 +259,6 @@ def formatproduct(instance_data, release_data):
                             "All data and photos unless otherwise noted are from Discogs"
                             )
 
-    images = format_image_array(release_data.images)
-    
     # Genres
     genres = format_atttributes(release_data.genres,  'Genres')
     # Styles
@@ -265,10 +271,13 @@ def formatproduct(instance_data, release_data):
                   "description": description, 
                   "short_description": short_description, 
                   "sku": str(instance_data['instance_id']), 
-                  "images": images, 
                   "attributes": attributes, 
                   "regular_price": price['regular'], 
                   "sale_price": price['sale']}
+                  
+    if type == "new":
+        images = format_image_array(release_data.images)
+        data.update({"images": images})
     '''
     name	string	Product name.
     slug	string	Product slug.
@@ -340,4 +349,5 @@ def update_attrib_term_list(attrib_name,  attrib_id):
     
 if __name__ == "__main__":
     process_woo()
+    sys.exit(0)
 
