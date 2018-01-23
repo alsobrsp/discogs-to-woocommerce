@@ -14,6 +14,7 @@ import dblog
 from woocommerce import API
 import htmlgen
 from utilities import *
+import urllib3
 
 # Import config
 from config import *
@@ -101,13 +102,15 @@ def process_products(type,  db_products):
     for idx in range(len(db_products)):
         # Get instance data from db
         instance_data = dbq.exec_db_query_dict(dbq.get_instance_info,  db_products[idx]['instance_id'])
+        dov_sales_status = eval(dbq.exec_db_query_dict(dbq.get_sales_channels,  db_products[idx]['instance_id'])['sales_channels'])['Sell on DoV']
+       
 
         # Get release data from Discogs
         # release_data = dbq.exec_db_query_dict(dbq.get_release_info, instance_data['release_id'])
         release_data = discogs.release(db_products[idx]['release_id'])
 
         # Send data to formater
-        product_data = formatproduct(instance_data, release_data,  type)
+        product_data = formatproduct(instance_data, release_data, dov_sales_status,  type)
 
         # Create Woo Product
         if type == "new":
@@ -214,11 +217,12 @@ def format_pricing(notes,  suggestions):
     return pricing
 
 
-def formatproduct(instance_data, release_data,  type="new"):
+def formatproduct(instance_data, release_data, dov_sales_status, type="new"):
     """
     This will take the instance, release, artist, and label data to build the product page
     TODO: Will need an object processor function, there are a number of array/object lists.
     """
+
     # Artists list
     artists = format_generic(release_data.artists)
     # Company list
@@ -274,7 +278,21 @@ def formatproduct(instance_data, release_data,  type="new"):
                   "attributes": attributes, 
                   "regular_price": price['regular'], 
                   "sale_price": price['sale']}
-                  
+
+    if dov_sales_status == "List Only":
+        #TODO: Figure out the URL formating
+        MESSAGE_STR = ('\"\n\nArtist: ' +   release_data.artists[0].name + '\nAlbum: ' + release_data.title + '\nSKU: ' + str(instance_data['instance_id']) + '\"')
+        URLOPTS = {'your-subject': 'Pruduct Inquiry',
+                             'your-message':  MESSAGE_STR}
+        external_url=(CONTACTURL + urllib3.request.urlencode(URLOPTS))
+        
+        data.update({"external_url": external_url,
+                               "button_text": "Pruduct Inquiry", 
+                               "type": 'external'})
+
+    if dov_sales_status == "Yes":
+        data.update({"type": 'simple'})
+
     if type == "new":
         images = format_image_array(release_data.images)
         data.update({"images": images})
