@@ -29,8 +29,16 @@ user = discogs.identity()
 process_name = "migrate discogs"
 
 def migrate_discogs():
+    """
+    This is the main function for getting information from discogs into our local migration tables
+    """
+    
+    # Check for the right DB schema version. We may want to do automatic DB updates somehow
     check_db_version()
+    
+    # Get the instance run_id, currently only use this for marking the end
     run_id = dblog.startup(process_name)
+    
     # Custom field name and ID, populate database
     getcustomfields()
 
@@ -122,7 +130,7 @@ def hashNotes(instance_notes):
 # TODO: Fix how artists and labels are stored.
 def discogs_new_releases():
     """
-    Get/Update release table
+    Get/Update release table,
     """
     import_new_releases = dbq.exec_db_query(dbq.get_new_release_list, qty='all')
     import_new_releases = [i[0] for i in import_new_releases]
@@ -144,6 +152,7 @@ def discogs_new_releases():
 
         
 def discogs_update_releases():
+    # FIXME: This is a copy on the new function, should probably combine them
     """
     Get/Update release table
     """
@@ -171,7 +180,7 @@ def discogsImport (discogs_folder):
     Imports discogs collections to table
     """
 
-    # Set collection
+    # Set collection 
     collection = user.collection_folders
 
     # Populate import table
@@ -207,11 +216,9 @@ def discogsImport (discogs_folder):
 
         # Test for existing and changed
         elif db_instance['instance_id'] == album.instance_id and \
-              (
-              db_instance['notes_chksum'] != notes_chksum.hexdigest() or \
-              db_instance['folder_id'] != album.folder_id or \
-              db_instance['release_id'] != album.id
-              ):
+              (db_instance['notes_chksum'] != notes_chksum.hexdigest() or 
+              db_instance['folder_id'] != album.folder_id or 
+              db_instance['release_id'] != album.id ):
             # Update notes if hash is different
             if db_instance['notes_chksum'] != notes_chksum.hexdigest():
                 query_data = {'notes': str(album.notes),
@@ -275,6 +282,9 @@ def getinstancelist():
     return db_instance_list
 
 def getcustomfields():
+    """
+    Grab the discogs custom fields and insert/update the db
+    """
     for idx in range(len(user.collection_fields)):
         query = None
 
