@@ -213,12 +213,14 @@ def discogsImport (discogs_folder):
                                     'release_id': album.id, 
                                     'insert_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             query = dbq.add_instance
+            dbq.exec_db_query(query, query_data, query_type='insert')
 
         # Test for existing and changed
         elif db_instance['instance_id'] == album.instance_id and \
               (db_instance['notes_chksum'] != notes_chksum.hexdigest() or 
               db_instance['folder_id'] != album.folder_id or 
               db_instance['release_id'] != album.id ):
+
             # Update notes if hash is different
             if db_instance['notes_chksum'] != notes_chksum.hexdigest():
                 query_data = {'notes': str(album.notes),
@@ -226,20 +228,28 @@ def discogsImport (discogs_folder):
                                          'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
                                          'instance_id': album.instance_id, 
                                          'release_id':  album.id}
-
                 query = dbq.update_instance_notes_chksum
+                dbq.exec_db_query(query, query_data, query_type='insert')
 
             # Update folder id
             if db_instance['folder_id'] != album.folder_id:
                 query_data = {'folder_id': album.folder_id,
                                          'update_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
                                          'instance_id': album.instance_id}
-
                 query = dbq.update_instance_folder_id
+                dbq.exec_db_query(query, query_data, query_type='insert')
+                
+            if db_instance['release_id'] != album.id:
+                query_data = {'release_id':  album.id, 
+                                        'instance_id': album.instance_id}
+                query = dbq.update_instance_release_id
+                dbq.exec_db_query(query, query_data, query_type='insert')
+                
 
-        # Execute queries
-        if query != None:
-            dbq.exec_db_query(query, query_data, query_type='insert')
+#FIXME: remove
+#        # Execute queries
+#        if query != None:
+#            dbq.exec_db_query(query, query_data, query_type='insert')
 
 
 # Query DB for instance data

@@ -85,6 +85,10 @@ get_instance_info = ('select * from dov_discogs_instances WHERE instance_id = %s
 
 get_release_info = ('select * from dov_discogs_releases WHERE release_id = %s')
 
+update_instance_release_id = ('UPDATE dov_discogs_instances '
+                                                  'SET release_id = %(release_id)s '
+                                                  'WHERE instance_id = %(instance_id)s')
+
 update_instance_notes_chksum = ('UPDATE dov_discogs_instances '
                                                         'SET notes = %(notes)s, '
                                                         'notes_chksum = %(notes_chksum)s, '
