@@ -34,3 +34,5 @@ condition_values = {"Mint (M)": 7,
                                  "Good (G)": 2,
                                  "Fair (F)": 1,
                                  "Poor (P)": 0}
+
+CONTACTURL=''
