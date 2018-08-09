@@ -45,13 +45,14 @@ def process_woo():
     # Styles to attribute terms
     update_attrib_term_list('styles', woo_attributes_list['Styles'])
     """
+    # Get category ids
+    global categories
+    categories = get_woo_categories()
     
     # Get attrib id dict.
     global attrib_ids
     attrib_ids = get_attrib_ids()
 
-    # TODO: create catagories
-    
     # create new products
     db_new_products = dbq.exec_db_query_dict(dbq.get_new_woo_instances,  qty="all")
     process_products("new",  db_new_products)
@@ -68,6 +69,14 @@ def process_woo():
     # TODO: deactivate removed products
     # TODO: Sold products Woo -> Discogs
     dblog.finished(run_id)
+
+# Get category ids
+def get_woo_categories():
+    categories = {}
+    woo_categories = wcapi.get("products/categories").json()
+    for idx in range(len(woo_categories)):
+        categories[woo_categories[idx]['name']] = woo_categories[idx]['id']
+    return categories
 
 # Attribute id list
 def get_attrib_ids():
@@ -117,12 +126,17 @@ def process_products(type,  db_products):
             product_endpoint = "products"
         elif type == "update":
             product_endpoint = ("products/" + str(db_products[idx]['woo_id']))
-        woo_product = wcapi.post(product_endpoint, product_data).json()
+        
+        try:
+            woo_product = wcapi.post(product_endpoint, product_data).json()
+        except:
+            print("Instance ID: " + str(db_products[idx]['instance_id']) + " threw an error during a " + type + " product operation talking to Woo. ")
+            continue
         
         # Update DB with Woo Product ID
         query_data = {"woo_id":  woo_product['id'], 
-                                "instance_id": db_products[idx]['instance_id'], 
-                                date_field: datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                            "instance_id": db_products[idx]['instance_id'], 
+                            date_field: datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
         dbq.exec_db_query(query, query_data, query_type='insert')
 
@@ -280,17 +294,21 @@ def formatproduct(instance_data, release_data, dov_sales_status, type="new"):
                   "sale_price": price['sale']}
 
     if dov_sales_status == "List Only":
-        #TODO: Figure out the URL formating
-        MESSAGE_STR = ('\"\n\nArtist: ' +   release_data.artists[0].name + '\nAlbum: ' + release_data.title + '\nSKU: ' + str(instance_data['instance_id']) + '\"')
+        MESSAGE_STR = ('Artist: ' +   release_data.artists[0].name + ' / Album: ' + release_data.title + ' / SKU: ' + str(instance_data['instance_id']))
         URLOPTS = {'your-subject': 'Pruduct Inquiry',
                              'your-message':  MESSAGE_STR}
         external_url=(CONTACTURL + urllib3.request.urlencode(URLOPTS))
+        
+        # TODO: Not for sale catagory
+        data.update({"categories": [{"id": categories[LIST_ONLY_CAT]}]})
         
         data.update({"external_url": external_url,
                                "button_text": "Pruduct Inquiry", 
                                "type": 'external'})
 
     if dov_sales_status == "Yes":
+        # TODO: For sale catagory
+        data.update({"categories": [{"id": categories[FOR_SALE_CAT]}]})
         data.update({"type": 'simple'})
 
     if type == "new":

@@ -36,3 +36,6 @@ condition_values = {"Mint (M)": 7,
                                  "Poor (P)": 0}
 
 CONTACTURL=''
+
+LIST_ONLY_CAT='Available Soon'
+FOR_SALE_CAT='Available Now'
