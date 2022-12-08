@@ -1,4 +1,4 @@
-certifi==2017.7.27.1
+certifi==2022.12.7
 chardet==3.0.4
 -e git+https://github.com/alsobrsp/discogs_client.git#egg=discogs_client
 htmlgen==0.99.0
